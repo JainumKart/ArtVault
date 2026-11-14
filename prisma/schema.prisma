@@ -1,0 +1,264 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  COLLECTOR
+  ARTIST
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VariantType {
+  ORIGINAL
+  LIMITED_PRINT
+  OPEN_PRINT
+}
+
+enum ArtworkStatus {
+  DRAFT
+  PENDING_REVIEW
+  AVAILABLE
+  SOLD
+  RESERVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKING_IN_PROGRESS
+  PICKUP_SCHEDULED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  HELD_IN_ESCROW
+  READY_FOR_SETTLEMENT
+  TRANSFERRED
+}
+
+model User {
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  phone           String?        @unique
+  role            Role           @default(COLLECTOR)
+  avatarUrl       String?
+  isPhoneVerified Boolean        @default(false)
+  isEmailVerified Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  artistProfile   ArtistProfile?
+  addresses       Address[]
+  orders          Order[]
+  reviews         Review[]
+}
+
+model Address {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName      String
+  phone         String
+  streetAddress String
+  apartment     String?
+  city          String
+  state         String
+  postalCode    String
+  country       String   @default("India")
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model ArtistProfile {
+  id              String        @id @default(uuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName     String
+  slug            String        @unique
+  bio             String
+  statement       String?
+  avatarUrl       String?
+  bannerUrl       String?
+  location        String
+  exhibitions     String[]      @default([])
+  commissionRate  Float         @default(0.20) // 20% standard platform fee
+  kycStatus       KycStatus     @default(PENDING)
+  panNumber       String?
+  bankAccount     String?
+  bankIfsc        String?
+  totalSales      Float         @default(0)
+  rating          Float         @default(5.0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  artworks        Artwork[]
+  payouts         Payout[]
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String
+  imageUrl    String
+  createdAt   DateTime  @default(now())
+
+  artworks    Artwork[]
+}
+
+model Artwork {
+  id             String          @id @default(uuid())
+  artistId       String
+  artist         ArtistProfile   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  categoryId     String
+  category       Category        @relation(fields: [categoryId], references: [id])
+  title          String
+  slug           String          @unique
+  description    String
+  medium         String
+  style          String
+  surface        String
+  yearCreated    Int
+  images         String[]
+  status         ArtworkStatus   @default(AVAILABLE)
+  isFeatured     Boolean         @default(false)
+  isCuratorPick  Boolean         @default(false)
+  tags           String[]        @default([])
+
+  packagingType  String          @default("WOODEN_CRATE") // WOODEN_CRATE, ROLLED_TUBE, STRETCHED_BOX
+  weightKg       Float           @default(2.5)
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  variants       ArtworkVariant[]
+  coa            CertificateOfAuthenticity?
+  reviews        Review[]
+}
+
+model ArtworkVariant {
+  id               String       @id @default(uuid())
+  artworkId        String
+  artwork          Artwork      @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  title            String
+  type             VariantType  @default(ORIGINAL)
+  editionTotal     Int?         // for limited prints (e.g. 50)
+  editionAvailable Int?         // remaining prints
+  price            Float
+  compareAtPrice   Float?
+  heightCm         Float
+  widthCm          Float
+  depthCm          Float?
+  weightKg         Float
+  inStock          Boolean      @default(true)
+
+  orderItems       OrderItem[]
+}
+
+model CertificateOfAuthenticity {
+  id                 String   @id @default(uuid())
+  artworkId          String   @unique
+  artwork            Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  qrCodeHash         String   @unique
+  tokenNumber        String   @unique
+  issueDate          DateTime @default(now())
+  signedByArtist     Boolean  @default(true)
+  verifiedByCurator  Boolean  @default(true)
+}
+
+model Order {
+  id              String         @id @default(uuid())
+  orderNumber     String         @unique
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress Json
+  subtotal        Float
+  taxGst          Float          // 12% on Artworks
+  shippingFee     Float          @default(0)
+  total           Float
+  orderStatus     OrderStatus    @default(CONFIRMED)
+  paymentStatus   PaymentStatus  @default(PAID)
+  paymentMethod   String         @default("UPI") // UPI, CREDIT_CARD, DEBIT_CARD, NETBANKING
+  paymentDetails  Json
+  scheduledPickup Json?          // Courier, AWB, Scheduled date, slot
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  items           OrderItem[]
+  payouts         Payout[]
+}
+
+model OrderItem {
+  id               String          @id @default(uuid())
+  orderId          String
+  order            Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId        String
+  variant          ArtworkVariant  @relation(fields: [variantId], references: [id])
+  artworkTitle     String
+  artworkImage     String
+  artistId         String
+  artistName       String
+  variantTitle     String
+  variantType      VariantType
+  editionNumber    Int?
+  framingName      String?
+  unitPrice        Float
+  framingPrice     Float           @default(0)
+  quantity         Int             @default(1)
+  totalPrice       Float
+}
+
+model Payout {
+  id                        String        @id @default(uuid())
+  orderId                   String
+  order                     Order         @relation(fields: [orderId], references: [id])
+  artistId                  String
+  artist                    ArtistProfile @relation(fields: [artistId], references: [id])
+  artworkTitle              String
+  grossSaleAmount           Float
+  platformCommissionPercent Float         @default(20)
+  platformCommissionAmount  Float
+  tdsPercent                Float         @default(1) // 1% TDS Indian IT Sec 194-O
+  tdsAmount                 Float
+  netPayoutAmount           Float
+  status                    PayoutStatus  @default(HELD_IN_ESCROW)
+  escrowReleaseDate         DateTime
+  settlementDate            DateTime?
+  createdAt                 DateTime      @default(now())
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  artworkId   String
+  artwork     Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  rating      Int      @default(5)
+  comment     String
+  createdAt   DateTime @default(now())
+}

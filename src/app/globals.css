@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%; /* warm off-white / museum ivory */
+    --foreground: 220 20% 12%; /* deep charcoal */
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
+
+    --primary: 38 65% 45%; /* regal warm gold/bronze */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 15% 93%;
+    --secondary-foreground: 220 20% 12%;
+
+    --muted: 40 10% 92%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 38 65% 95%;
+    --accent-foreground: 38 65% 30%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
+    --ring: 38 65% 45%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 40 20% 96%;
+
+    --card: 220 25% 11%;
+    --card-foreground: 40 20% 96%;
+
+    --popover: 220 25% 11%;
+    --popover-foreground: 40 20% 96%;
+
+    --primary: 38 75% 55%;
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 40 20% 96%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 65%;
+
+    --accent: 220 20% 20%;
+    --accent-foreground: 38 75% 65%;
+
+    --destructive: 0 62.8% 40.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 38 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom art gallery styling */
+.artwork-frame {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.artwork-frame:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
