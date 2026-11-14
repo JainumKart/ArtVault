@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { formatINR } from '@/lib/utils';
+import { STYLE_CLASSES, APP_CONFIG, INDIAN_STATES } from '@/constants';
 import {
   ShieldCheck,
   Truck,
@@ -89,33 +90,18 @@ export default function CheckoutPage() {
     router.push(`/order-success?orderId=${generatedOrderNumber}`);
   };
 
-  const indianStates = [
-    'Maharashtra',
-    'Delhi NCR',
-    'Karnataka',
-    'Tamil Nadu',
-    'West Bengal',
-    'Telangana',
-    'Kerala',
-    'Gujarat',
-    'Rajasthan',
-    'Punjab',
-    'Uttar Pradesh',
-    'Goa',
-  ];
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
       {/* Checkout Header */}
       <div className="border-b border-border pb-6 flex items-center justify-between">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-primary">Secure Settlement</span>
+          <span className={STYLE_CLASSES.typography.eyebrow}>Secure Settlement</span>
           <h1 className="font-serif text-3xl font-bold text-foreground mt-1">
             Acquisition Checkout &amp; White-Glove Dispatch
           </h1>
         </div>
-        <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-full font-semibold border border-emerald-500/20">
-          <Lock className="w-3.5 h-3.5" /> 256-Bit SSL &bull; Razorpay Route Escrow
+        <div className="hidden sm:flex items-center gap-2 text-xs text-blue-600 dark:text-blue-300 bg-blue-500/10 dark:bg-blue-950/40 px-3 py-1.5 rounded-full font-semibold border border-blue-500/20 dark:border-blue-800/40">
+          <Lock className="w-3.5 h-3.5" /> 256-Bit SSL &bull; Razorpay Escrow Protection
         </div>
       </div>
 
@@ -123,10 +109,10 @@ export default function CheckoutPage() {
         {/* Left Column: Delivery Address & Payment Method (7 cols) */}
         <div className="lg:col-span-7 space-y-8">
           {/* 1. Indian Shipping Address */}
-          <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-xs">
+          <div className="bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-2xl p-6 space-y-4 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="font-serif font-bold text-base text-foreground flex items-center gap-2">
-                <Truck className="w-4 h-4 text-primary" />
+                <Truck className="w-4 h-4 text-primary dark:text-purple-400" />
                 1. Delivery &amp; White-Glove Unpacking Address
               </h3>
               <span className="text-[11px] text-muted-foreground">Domestic India Delivery</span>
@@ -134,67 +120,67 @@ export default function CheckoutPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="font-semibold text-foreground block mb-1">Full Legal Name</label>
+                <label className={STYLE_CLASSES.forms.label}>Full Legal Name</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1">10-Digit Mobile Number (for Courier)</label>
+                <label className={STYLE_CLASSES.forms.label}>10-Digit Mobile Number (for Courier)</label>
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="font-semibold text-foreground block mb-1">Street Address / Society Name</label>
+                <label className={STYLE_CLASSES.forms.label}>Street Address / Society Name</label>
                 <input
                   type="text"
                   required
                   value={streetAddress}
                   onChange={e => setStreetAddress(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1">Flat / Floor / Landmark (Optional)</label>
+                <label className={STYLE_CLASSES.forms.label}>Flat / Floor / Landmark (Optional)</label>
                 <input
                   type="text"
                   value={apartment}
                   onChange={e => setApartment(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1">City</label>
+                <label className={STYLE_CLASSES.forms.label}>City</label>
                 <input
                   type="text"
                   required
                   value={city}
                   onChange={e => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1">State</label>
+                <label className={STYLE_CLASSES.forms.label}>State</label>
                 <select
                   value={stateName}
                   onChange={e => setStateName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.select}
                 >
-                  {indianStates.map(st => (
+                  {INDIAN_STATES.map(st => (
                     <option key={st} value={st}>
                       {st}
                     </option>
@@ -203,21 +189,21 @@ export default function CheckoutPage() {
               </div>
 
               <div>
-                <label className="font-semibold text-foreground block mb-1">PIN Code (6 digits)</label>
+                <label className={STYLE_CLASSES.forms.label}>PIN Code (6 digits)</label>
                 <input
                   type="text"
                   required
                   maxLength={6}
                   value={postalCode}
                   onChange={e => setPostalCode(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.input}
                 />
               </div>
             </div>
 
             {/* Scheduled Courier Pickup Notice */}
-            <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 flex items-start gap-3 text-xs">
-              <Truck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-muted/50 dark:bg-slate-900/50 border border-border/80 dark:border-purple-900/30 flex items-start gap-3 text-xs">
+              <Truck className="w-4 h-4 text-primary dark:text-purple-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold text-foreground">Scheduled White-Glove Studio Pickup</p>
                 <p className="text-muted-foreground mt-0.5 leading-relaxed">
@@ -229,10 +215,10 @@ export default function CheckoutPage() {
           </div>
 
           {/* 2. Indian Payment Gateways */}
-          <div className="bg-card border border-border rounded-2xl p-6 space-y-5 shadow-xs">
+          <div className="bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-2xl p-6 space-y-5 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="font-serif font-bold text-base text-foreground flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-primary" />
+                <CreditCard className="w-4 h-4 text-primary dark:text-purple-400" />
                 2. Payment Gateway (India Supported)
               </h3>
               <span className="text-[11px] text-muted-foreground">Powered by Razorpay</span>
@@ -245,8 +231,8 @@ export default function CheckoutPage() {
                 onClick={() => setPaymentMethod('upi')}
                 className={`p-3.5 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                   paymentMethod === 'upi'
-                    ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold'
-                    : 'border-border text-foreground hover:bg-muted'
+                    ? 'border-primary dark:border-purple-500 bg-primary/10 dark:bg-purple-950/40 text-primary dark:text-purple-300 ring-1 ring-primary dark:ring-purple-500 font-bold'
+                    : 'border-border text-foreground hover:bg-muted dark:hover:bg-slate-900/50'
                 }`}
               >
                 <Smartphone className="w-5 h-5" />
@@ -258,8 +244,8 @@ export default function CheckoutPage() {
                 onClick={() => setPaymentMethod('card')}
                 className={`p-3.5 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                   paymentMethod === 'card'
-                    ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold'
-                    : 'border-border text-foreground hover:bg-muted'
+                    ? 'border-primary dark:border-purple-500 bg-primary/10 dark:bg-purple-950/40 text-primary dark:text-purple-300 ring-1 ring-primary dark:ring-purple-500 font-bold'
+                    : 'border-border text-foreground hover:bg-muted dark:hover:bg-slate-900/50'
                 }`}
               >
                 <CreditCard className="w-5 h-5" />
@@ -271,8 +257,8 @@ export default function CheckoutPage() {
                 onClick={() => setPaymentMethod('netbanking')}
                 className={`p-3.5 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
                   paymentMethod === 'netbanking'
-                    ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold'
-                    : 'border-border text-foreground hover:bg-muted'
+                    ? 'border-primary dark:border-purple-500 bg-primary/10 dark:bg-purple-950/40 text-primary dark:text-purple-300 ring-1 ring-primary dark:ring-purple-500 font-bold'
+                    : 'border-border text-foreground hover:bg-muted dark:hover:bg-slate-900/50'
                 }`}
               >
                 <Building className="w-5 h-5" />
@@ -282,9 +268,9 @@ export default function CheckoutPage() {
 
             {/* UPI Tab */}
             {paymentMethod === 'upi' && (
-              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-slate-900/50 border border-border dark:border-purple-900/30 space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold text-foreground block mb-1">
+                  <label className={STYLE_CLASSES.forms.label}>
                     UPI ID / VPA (e.g. mobile@upi, gpay, phonepe)
                   </label>
                   <input
@@ -292,7 +278,7 @@ export default function CheckoutPage() {
                     value={upiVpa}
                     onChange={e => setUpiVpa(e.target.value)}
                     placeholder="yourname@okhdfcbank"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                    className={STYLE_CLASSES.forms.input}
                   />
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
@@ -307,34 +293,34 @@ export default function CheckoutPage() {
 
             {/* Card Tab */}
             {paymentMethod === 'card' && (
-              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-slate-900/50 border border-border dark:border-purple-900/30 space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold text-foreground block mb-1">Card Number</label>
+                  <label className={STYLE_CLASSES.forms.label}>Card Number</label>
                   <input
                     type="text"
                     value={cardNumber}
                     onChange={e => setCardNumber(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 font-mono"
+                    className={STYLE_CLASSES.forms.input + " font-mono"}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-semibold text-foreground block mb-1">Valid Thru (MM/YY)</label>
+                    <label className={STYLE_CLASSES.forms.label}>Valid Thru (MM/YY)</label>
                     <input
                       type="text"
                       value={cardExpiry}
                       onChange={e => setCardExpiry(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 font-mono"
+                      className={STYLE_CLASSES.forms.input + " font-mono"}
                     />
                   </div>
                   <div>
-                    <label className="font-semibold text-foreground block mb-1">CVV</label>
+                    <label className={STYLE_CLASSES.forms.label}>CVV</label>
                     <input
                       type="password"
                       maxLength={4}
                       value={cardCvv}
                       onChange={e => setCardCvv(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 font-mono"
+                      className={STYLE_CLASSES.forms.input + " font-mono"}
                     />
                   </div>
                 </div>
@@ -346,12 +332,12 @@ export default function CheckoutPage() {
 
             {/* NetBanking Tab */}
             {paymentMethod === 'netbanking' && (
-              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
-                <label className="font-semibold text-foreground block mb-1">Select Bank</label>
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-slate-900/50 border border-border dark:border-purple-900/30 space-y-3 text-xs">
+                <label className={STYLE_CLASSES.forms.label}>Select Bank</label>
                 <select
                   value={selectedBank}
                   onChange={e => setSelectedBank(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  className={STYLE_CLASSES.forms.select}
                 >
                   <option value="HDFC Bank">HDFC Bank</option>
                   <option value="ICICI Bank">ICICI Bank</option>
@@ -363,14 +349,14 @@ export default function CheckoutPage() {
             )}
 
             {/* Escrow Trust Strip */}
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3 text-xs">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl bg-blue-500/10 dark:bg-blue-950/30 border border-blue-500/20 dark:border-blue-800/40 flex items-start gap-3 text-xs">
+              <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-serif font-bold text-emerald-950 dark:text-emerald-100">
-                  RBI-Compliant 7-Day Escrow Protection
+                <p className="font-serif font-bold text-blue-950 dark:text-blue-200">
+                  RBI-Compliant {APP_CONFIG.financial.escrowHoldingDays}-Day Escrow Protection
                 </p>
-                <p className="text-emerald-800 dark:text-emerald-300/80 mt-0.5 leading-relaxed text-[11px]">
-                  Your settlement is securely held in an escrow account. The artist is paid only after you inspect the original artwork and approve authenticity within 7 calendar days.
+                <p className="text-blue-800 dark:text-blue-300/80 mt-0.5 leading-relaxed text-[11px]">
+                  Your settlement is securely held in an escrow account. The artist is paid only after you inspect the original artwork and approve authenticity within {APP_CONFIG.financial.escrowHoldingDays} calendar days.
                 </p>
               </div>
             </div>
@@ -379,7 +365,7 @@ export default function CheckoutPage() {
 
         {/* Right Column: Order Summary & Settlement Button (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-card border border-border rounded-2xl p-6 space-y-5 shadow-sm sticky top-24">
+          <div className="bg-card dark:bg-gradient-to-br dark:from-card dark:via-purple-950/15 dark:to-blue-950/20 border border-border dark:border-purple-900/30 rounded-2xl p-6 space-y-5 shadow-sm sticky top-24">
             <h3 className="font-serif font-bold text-base text-foreground pb-3 border-b border-border">
               Acquisition Summary ({items.length} {items.length === 1 ? 'item' : 'items'})
             </h3>
@@ -417,16 +403,16 @@ export default function CheckoutPage() {
                 <span>{formatINR(subtotal)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>GST (12% under HSN 9701)</span>
+                <span>GST ({APP_CONFIG.financial.gstPercent}% under HSN 9701)</span>
                 <span>{formatINR(taxGst)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>White-Glove Scheduled Pickup &amp; Transit</span>
-                <span>{shippingFee === 0 ? 'FREE (Orders > ₹15,000)' : formatINR(shippingFee)}</span>
+                <span>{shippingFee === 0 ? `FREE (Orders > ${formatINR(APP_CONFIG.financial.freeShippingThreshold)})` : formatINR(shippingFee)}</span>
               </div>
               <div className="pt-3 border-t border-border flex justify-between text-base font-bold text-foreground">
                 <span>Total Amount</span>
-                <span className="font-serif text-xl text-primary">{formatINR(total)}</span>
+                <span className="font-serif text-xl text-primary dark:text-purple-400">{formatINR(total)}</span>
               </div>
             </div>
 
@@ -435,7 +421,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                className={STYLE_CLASSES.buttons.primary + " w-full py-4 text-sm font-semibold"}
               >
                 {isProcessing ? (
                   <span className="flex items-center gap-2">

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { THEME_COLORS } from "./src/constants/styles";
 
 const config: Config = {
   darkMode: ["class"],
@@ -6,6 +7,7 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/constants/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -43,18 +45,12 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        gold: {
-          50: "#FAF7EE",
-          100: "#F5EFD7",
-          200: "#EADDAE",
-          300: "#DFC984",
-          400: "#D3B55A",
-          500: "#C59B27",
-          600: "#A27C1C",
-          700: "#7F5E15",
-          800: "#5D4211",
-          900: "#412D0B",
-        },
+
+        // Specialized theme palettes
+        gold: THEME_COLORS.gold,
+        purple: THEME_COLORS.purple,
+        blue: THEME_COLORS.blue,
+        gray: THEME_COLORS.gray,
       },
       borderRadius: {
         lg: "var(--radius)",

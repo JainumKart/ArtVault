@@ -3,14 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { mockArtists, mockArtworks } from '@/lib/mock-data';
+import { STYLE_CLASSES } from '@/constants';
 import { CheckCircle2, Star, MapPin, Award, ArrowRight } from 'lucide-react';
 
 export default function ArtistsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-12"}>
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">The Creators</span>
+        <span className={STYLE_CLASSES.typography.eyebrow}>The Creators</span>
         <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground">
           Master Artists &amp; Contemporary Creators
         </h1>
@@ -28,7 +29,7 @@ export default function ArtistsPage() {
           return (
             <div
               key={artist.id}
-              className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group"
+              className={STYLE_CLASSES.cards.interactive + " rounded-3xl overflow-hidden"}
             >
               {/* Studio Banner */}
               <div className="relative h-32 bg-muted overflow-hidden">
@@ -51,14 +52,14 @@ export default function ArtistsPage() {
                       className="w-20 h-20 rounded-full object-cover border-4 border-card shadow-md"
                     />
                     {artist.kycStatus === 'VERIFIED' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      <span className={STYLE_CLASSES.badges.verifiedGreen}>
                         <CheckCircle2 className="w-3.5 h-3.5" /> Verified KYC
                       </span>
                     )}
                   </div>
 
                   {/* Name & Location */}
-                  <h3 className="font-serif text-xl font-bold text-foreground group-hover:text-primary transition">
+                  <h3 className="font-serif text-xl font-bold text-foreground group-hover:text-primary dark:group-hover:text-purple-400 transition">
                     {artist.displayName}
                   </h3>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
@@ -78,7 +79,7 @@ export default function ArtistsPage() {
                   {/* Exhibitions list */}
                   <div className="mt-4 pt-3 border-t border-border space-y-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                      <Award className="w-3 h-3 text-primary" /> Key Exhibitions
+                      <Award className="w-3 h-3 text-primary dark:text-purple-400" /> Key Exhibitions
                     </span>
                     <p className="text-xs text-foreground font-medium truncate">
                       {artist.exhibitions[0]}
@@ -94,7 +95,7 @@ export default function ArtistsPage() {
                     </span>
                     <Link
                       href={`/artists/${artist.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-primary dark:text-purple-400 hover:underline"
                     >
                       Visit Studio <ArrowRight className="w-3.5 h-3.5" />
                     </Link>

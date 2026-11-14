@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { mockOrders, mockArtworks } from '@/lib/mock-data';
 import { formatINR, formatDate } from '@/lib/utils';
+import { STYLE_CLASSES } from '@/constants';
 import {
   User as UserIcon,
   ShieldCheck,
@@ -42,28 +43,28 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
       {/* Profile Header */}
-      <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <img
             src={user.avatarUrl}
             alt={user.name}
-            className="w-20 h-20 rounded-full object-cover border-4 border-muted shadow-sm"
+            className="w-20 h-20 rounded-full object-cover border-4 border-muted dark:border-purple-900/40 shadow-sm"
           />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
                 {user.name}
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+              <span className={STYLE_CLASSES.badges.printPurple}>
                 {role}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {user.email} &bull; {user.phone}
             </p>
-            <div className="flex items-center gap-3 mt-2 text-xs text-emerald-600">
+            <div className="flex items-center gap-3 mt-2 text-xs text-emerald-600 dark:text-emerald-400">
               <span className="flex items-center gap-1 font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Mobile OTP Verified
               </span>
@@ -75,7 +76,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Persona quick switch */}
-        <div className="flex items-center gap-2 bg-muted/40 p-2 rounded-2xl border border-border text-xs">
+        <div className="flex items-center gap-2 bg-muted/40 dark:bg-slate-900/50 p-2 rounded-2xl border border-border dark:border-purple-900/30 text-xs">
           <span className="text-muted-foreground px-2">Role:</span>
           {(['COLLECTOR', 'ARTIST', 'ADMIN'] as const).map(r => (
             <button
@@ -83,7 +84,7 @@ export default function ProfilePage() {
               onClick={() => setRole(r)}
               className={`px-3 py-1.5 rounded-xl transition font-semibold capitalize ${
                 role === r
-                  ? 'bg-card text-primary shadow-xs'
+                  ? 'bg-card text-primary dark:text-purple-300 shadow-xs ring-1 ring-primary/20 dark:ring-purple-500/30'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -99,7 +100,7 @@ export default function ProfilePage() {
           onClick={() => setActiveTab('vault')}
           className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'vault'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -111,7 +112,7 @@ export default function ProfilePage() {
           onClick={() => setActiveTab('orders')}
           className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'orders'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -123,7 +124,7 @@ export default function ProfilePage() {
           onClick={() => setActiveTab('addresses')}
           className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'addresses'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >

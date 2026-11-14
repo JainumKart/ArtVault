@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    /* LIGHT THEME — Museum Ivory, Fine Art Gold, Deep Charcoal */
     --background: 40 20% 98%; /* warm off-white / museum ivory */
     --foreground: 220 20% 12%; /* deep charcoal */
 
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 12%;
 
-    --primary: 38 65% 45%; /* regal warm gold/bronze */
+    --primary: 38 65% 45%; /* regal warm gold */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 40 15% 93%;
@@ -32,37 +33,38 @@
     --input: 40 15% 88%;
     --ring: 38 65% 45%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 40 20% 96%;
+    /* DARK THEME — Refined Grays, Royal Purples, and Midnight Blues */
+    --background: 225 25% 9%; /* Deep Slate-Charcoal Gray */
+    --foreground: 220 20% 96%; /* Ice Lavender-White */
 
-    --card: 220 25% 11%;
-    --card-foreground: 40 20% 96%;
+    --card: 226 22% 13%; /* Slate-Purple Tinted Dark Card */
+    --card-foreground: 220 20% 96%;
 
-    --popover: 220 25% 11%;
-    --popover-foreground: 40 20% 96%;
+    --popover: 226 22% 13%;
+    --popover-foreground: 220 20% 96%;
 
-    --primary: 38 75% 55%;
-    --primary-foreground: 220 25% 8%;
+    --primary: 265 82% 64%; /* Royal Violet-Purple Accent */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 16%;
-    --secondary-foreground: 40 20% 96%;
+    --secondary: 222 30% 18%; /* Midnight Blue-Slate */
+    --secondary-foreground: 215 35% 92%;
 
-    --muted: 220 20% 18%;
-    --muted-foreground: 220 10% 65%;
+    --muted: 224 18% 18%; /* Muted Slate Gray */
+    --muted-foreground: 225 15% 65%; /* Cool Lavender-Gray */
 
-    --accent: 220 20% 20%;
-    --accent-foreground: 38 75% 65%;
+    --accent: 245 45% 22%; /* Indigo-Purple Accent Fill */
+    --accent-foreground: 225 90% 75%; /* Electric Sky-Lavender */
 
-    --destructive: 0 62.8% 40.6%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 38 75% 55%;
+    --border: 226 20% 21%; /* Slate-Purple Gray Border */
+    --input: 226 20% 21%;
+    --ring: 265 82% 64%; /* Royal Purple Focus Ring */
   }
 }
 
@@ -71,12 +73,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* Custom art gallery styling */
+/* Custom art gallery & dark aura styling */
 .artwork-frame {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -85,4 +87,17 @@
 .artwork-frame:hover {
   transform: translateY(-4px);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.dark .artwork-frame {
+  box-shadow: 0 20px 40px -15px rgba(88, 28, 135, 0.25), 0 0 0 1px rgba(124, 58, 237, 0.12);
+}
+
+.dark .artwork-frame:hover {
+  box-shadow: 0 25px 50px -12px rgba(88, 28, 135, 0.4), 0 0 0 1px rgba(124, 58, 237, 0.25);
+}
+
+/* Dark mode atmospheric purple/blue ambient glow */
+.dark-ambient-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.15), rgba(37, 99, 235, 0.08) 45%, transparent 70%);
 }

@@ -11,6 +11,7 @@ import { ArtworkVariant, FramingOption } from '@/types';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/lib/cart-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
+import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
   Eye,
   ShoppingBag,
@@ -64,7 +65,7 @@ export default function ArtworkDetailPage() {
   const widthInches = (selectedVariant.dimensions.widthCm / 2.54).toFixed(1);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-8 space-y-12"}>
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-xs text-muted-foreground">
         <Link href="/" className="hover:text-foreground">Home</Link>
@@ -78,7 +79,7 @@ export default function ArtworkDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left: High-Definition Artwork Image & Interactive Tools (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="relative bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-2xl overflow-hidden shadow-sm dark:shadow-purple-950/40">
             <div
               className={`relative aspect-4/5 overflow-hidden bg-muted cursor-zoom-in ${
                 isZoomed ? 'scale-125 transition-transform duration-300' : ''
@@ -94,12 +95,12 @@ export default function ArtworkDetailPage() {
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {artwork.isOriginalAvailable && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500 text-zinc-950 shadow-md">
+                  <span className={STYLE_CLASSES.badges.originalGold}>
                     1-of-1 Original
                   </span>
                 )}
                 {artwork.minPrintPrice && (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-zinc-900/90 text-white border border-white/20 shadow-md">
+                  <span className={STYLE_CLASSES.badges.printPurple}>
                     Certified Prints Available
                   </span>
                 )}
@@ -113,15 +114,15 @@ export default function ArtworkDetailPage() {
                 onClick={() => setIsVisualizerOpen(true)}
                 className="px-4 py-2 rounded-xl bg-card border border-border text-foreground hover:bg-card/80 font-semibold shadow-xs flex items-center gap-2 transition"
               >
-                <Eye className="w-4 h-4 text-primary" />
+                <Eye className="w-4 h-4 text-primary dark:text-purple-400" />
                 View in Your Room (Virtual Wall Preview)
               </button>
             </div>
           </div>
 
           {/* Certificate of Authenticity Preview Card */}
-          <div className="bg-card border border-border rounded-2xl p-5 flex items-start gap-4 shadow-xs">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+          <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 flex items-start gap-4 shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -129,11 +130,11 @@ export default function ArtworkDetailPage() {
                 <h4 className="font-serif font-bold text-sm text-foreground">
                   Cryptographically Verified Certificate of Authenticity
                 </h4>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                <span className={STYLE_CLASSES.badges.verifiedGreen}>
                   QR Verified
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className={STYLE_CLASSES.typography.bodySmall}>
                 Includes unique tamper-proof token <code className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-mono text-foreground">{artwork.certificateOfAuthenticity.tokenNumber}</code> signed by {artwork.artistName}. A physical embossed archival slip is also packaged with the shipment.
               </p>
             </div>
@@ -146,7 +147,7 @@ export default function ArtworkDetailPage() {
           <div>
             <Link
               href={`/artists/${artwork.artistId}`}
-              className="text-xs font-bold uppercase tracking-wider text-primary hover:underline"
+              className="text-xs font-bold uppercase tracking-wider text-primary dark:text-purple-400 hover:underline"
             >
               {artwork.artistName} &bull; {artwork.artistLocation}
             </Link>
@@ -173,7 +174,7 @@ export default function ArtworkDetailPage() {
                     onClick={() => setSelectedVariant(variant)}
                     className={`p-4 rounded-xl border cursor-pointer transition flex items-center justify-between ${
                       isSelected
-                        ? 'border-primary bg-primary/5 shadow-xs ring-1 ring-primary'
+                        ? 'border-primary dark:border-purple-500 bg-primary/5 dark:bg-purple-950/30 shadow-xs ring-1 ring-primary dark:ring-purple-500'
                         : 'border-border bg-card hover:bg-muted/30'
                     }`}
                   >
@@ -183,12 +184,12 @@ export default function ArtworkDetailPage() {
                           {variant.title}
                         </span>
                         {variant.type === 'ORIGINAL' && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                          <span className={STYLE_CLASSES.badges.originalGold}>
                             Unique 1/1
                           </span>
                         )}
                         {variant.type === 'LIMITED_PRINT' && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-700 dark:text-purple-300">
+                          <span className={STYLE_CLASSES.badges.printPurple}>
                             {variant.editionAvailable} of {variant.editionTotal} Available
                           </span>
                         )}
@@ -215,7 +216,7 @@ export default function ArtworkDetailPage() {
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Custom Archival Framing
               </label>
-              <span className="text-xs text-primary font-semibold">
+              <span className="text-xs text-primary dark:text-purple-400 font-semibold">
                 {selectedFraming.name}
               </span>
             </div>
@@ -229,7 +230,7 @@ export default function ArtworkDetailPage() {
                     onClick={() => setSelectedFraming(framing)}
                     className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
                       isSelected
-                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                        ? 'border-primary dark:border-purple-500 bg-primary/5 dark:bg-purple-950/30 ring-1 ring-primary dark:ring-purple-500'
                         : 'border-border bg-card hover:bg-muted/40'
                     }`}
                   >
@@ -255,7 +256,7 @@ export default function ArtworkDetailPage() {
           </div>
 
           {/* Pricing & Checkout Actions */}
-          <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
+          <div className="bg-card dark:bg-gradient-to-br dark:from-card dark:via-purple-950/10 dark:to-blue-950/20 border border-border dark:border-purple-900/30 rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-baseline justify-between">
               <div>
                 <p className="text-xs text-muted-foreground">Total Acquisition Price</p>
@@ -263,7 +264,7 @@ export default function ArtworkDetailPage() {
                   {formatINR(currentTotalPrice)}
                 </p>
               </div>
-              <span className="text-[11px] text-emerald-600 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full">
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full">
                 Free Scheduled Pickup &amp; Transit
               </span>
             </div>
@@ -271,7 +272,7 @@ export default function ArtworkDetailPage() {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-3.5 rounded-xl border border-primary text-primary font-semibold text-sm hover:bg-primary/10 transition flex items-center justify-center gap-2"
+                className={STYLE_CLASSES.buttons.secondary + " py-3.5 text-sm"}
               >
                 <ShoppingBag className="w-4 h-4" />
                 Add to Cart
@@ -279,7 +280,7 @@ export default function ArtworkDetailPage() {
 
               <button
                 onClick={handleBuyNow}
-                className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition shadow-md flex items-center justify-center gap-2"
+                className={STYLE_CLASSES.buttons.primary + " py-3.5 text-sm"}
               >
                 Acquire Now
               </button>
@@ -288,15 +289,15 @@ export default function ArtworkDetailPage() {
             {/* Quick Guarantees */}
             <div className="pt-3 border-t border-border/80 space-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-primary shrink-0" />
+                <Truck className="w-4 h-4 text-primary dark:text-purple-400 shrink-0" />
                 <span>Scheduled white-glove pickup from artist&apos;s studio</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>7-Day Escrow Protection: Full refund if not satisfied</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{APP_CONFIG.financial.escrowHoldingDays}-Day Escrow Protection: Full refund if not satisfied</span>
               </div>
               <div className="flex items-center gap-2">
-                <Box className="w-4 h-4 text-primary shrink-0" />
+                <Box className="w-4 h-4 text-primary dark:text-purple-400 shrink-0" />
                 <span>Packaging: {artwork.shippingInfo.packaging.replace(/_/g, ' ')}</span>
               </div>
             </div>
@@ -350,7 +351,7 @@ export default function ArtworkDetailPage() {
             </div>
             <Link
               href={`/artists/${artwork.artistId}`}
-              className="text-xs font-bold text-primary hover:underline"
+              className="text-xs font-bold text-primary dark:text-purple-400 hover:underline"
             >
               View Studio &rarr;
             </Link>

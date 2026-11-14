@@ -4,19 +4,18 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/lib/cart-context';
+import { Logo } from '@/components/ui/Logo';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { STYLE_CLASSES, NAV_LINKS, APP_CONFIG } from '@/constants';
 import {
   ShoppingBag,
-  Search,
   User as UserIcon,
   Palette,
   Shield,
-  Layers,
   Sparkles,
   ChevronDown,
   Menu,
   X,
-  PlusCircle,
-  Truck,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -27,48 +26,34 @@ export function Navbar() {
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md">
-      {/* Top Banner: Scheduled White-Glove Pickup & RBI Compliant Escrow */}
-      <div className="bg-primary/95 text-primary-foreground text-[11px] font-medium py-1 px-4 text-center tracking-wide flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5" />
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md transition-colors duration-200">
+      {/* Top Banner: Scheduled White-Glove Pickup & Escrow Notice */}
+      <div className="bg-primary/95 text-primary-foreground dark:bg-purple-900/90 dark:text-purple-100 text-[11px] font-medium py-1 px-4 text-center tracking-wide flex items-center justify-center gap-2 transition-colors">
+        <Sparkles className="w-3.5 h-3.5 text-amber-300 dark:text-purple-300" />
         <span>
           Curated Fine Art Marketplace &bull; 100% Verifiable Certificates of Authenticity &bull; Scheduled White-Glove Pickups
         </span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={STYLE_CLASSES.layout.pageContainer}>
         <div className="flex items-center justify-between h-18">
-          {/* Logo & Brand */}
+          {/* Logo & Navigation */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-lg bg-foreground text-background flex items-center justify-center font-serif font-black text-xl shadow-sm group-hover:scale-105 transition">
-                A
-              </div>
-              <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
-                Art<span className="text-primary italic">Vault</span>
-              </span>
+            <Link href="/" className="group focus:outline-hidden">
+              <Logo size="md" />
             </Link>
 
             {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <Link
-                href="/artworks"
-                className="text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
-              >
-                Explore Artworks
-              </Link>
-              <Link
-                href="/categories"
-                className="text-muted-foreground hover:text-foreground transition"
-              >
-                Categories
-              </Link>
-              <Link
-                href="/artists"
-                className="text-muted-foreground hover:text-foreground transition"
-              >
-                Featured Artists
-              </Link>
+              {NAV_LINKS.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
 
               {role === 'ARTIST' && (
                 <Link
@@ -90,23 +75,26 @@ export function Navbar() {
             </nav>
           </div>
 
-          {/* Right Action Icons & Persona Switcher */}
-          <div className="flex items-center gap-3">
+          {/* Right Action Icons, Theme Switcher & Persona Switcher */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Theme Toggle (Light / Dark) */}
+            <ThemeToggle />
+
             {/* Interactive Role Switcher Pill */}
             <div className="relative">
               <button
                 onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-muted border border-border hover:bg-muted/80 transition"
-                title="Switch platform view mode"
+                className={`hidden lg:flex ${STYLE_CLASSES.badges.rolePill}`}
+                title="Switch platform test role"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-muted-foreground">Viewing as:</span>
-                <span className="text-foreground capitalize">{role.toLowerCase()}</span>
+                <span className="text-muted-foreground">Viewing:</span>
+                <span className="text-foreground capitalize font-semibold">{role.toLowerCase()}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
 
               {isRoleDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl py-1 z-50 text-xs">
+                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-1 z-50 text-xs animate-in fade-in zoom-in-95">
                   <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
                     Switch Test Persona
                   </div>
@@ -153,7 +141,7 @@ export function Navbar() {
             {/* Cart Trigger Button */}
             <button
               onClick={openCart}
-              className="relative p-2 rounded-full text-foreground hover:bg-muted transition"
+              className="relative p-2 rounded-xl text-foreground hover:bg-muted transition-colors border border-transparent hover:border-border"
               aria-label="View cart"
             >
               <ShoppingBag className="w-5 h-5" />
@@ -169,7 +157,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-primary/40 transition"
+                  className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-primary/40 dark:hover:ring-purple-500/40 transition"
                 >
                   <img
                     src={user.avatarUrl}
@@ -179,7 +167,7 @@ export function Navbar() {
                 </button>
 
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl py-2 z-50 text-xs">
+                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in zoom-in-95">
                     <div className="px-3 py-2 border-b border-border">
                       <p className="font-semibold text-foreground truncate">{user.name}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
@@ -193,7 +181,7 @@ export function Navbar() {
                       onClick={() => setIsProfileDropdownOpen(false)}
                       className="block px-3 py-2 text-foreground hover:bg-muted transition"
                     >
-                      Collector Dashboard & COA Vault
+                      Collector Dashboard &amp; COA Vault
                     </Link>
 
                     {role === 'ARTIST' && (
@@ -202,7 +190,7 @@ export function Navbar() {
                         onClick={() => setIsProfileDropdownOpen(false)}
                         className="block px-3 py-2 text-foreground hover:bg-muted transition font-medium text-amber-700 dark:text-amber-300"
                       >
-                        Artist Studio & Orders
+                        Artist Studio &amp; Orders
                       </Link>
                     )}
 
@@ -233,7 +221,7 @@ export function Navbar() {
             ) : (
               <button
                 onClick={() => openAuthModal()}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 transition shadow-xs"
+                className={STYLE_CLASSES.buttons.primary}
               >
                 Sign In / Join
               </button>
@@ -242,7 +230,7 @@ export function Navbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground rounded-lg"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -253,38 +241,33 @@ export function Navbar() {
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
-          <Link
-            href="/artworks"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-foreground"
-          >
-            Explore Artworks
-          </Link>
-          <Link
-            href="/categories"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-foreground"
-          >
-            Categories
-          </Link>
-          <Link
-            href="/artists"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-foreground"
-          >
-            Featured Artists
-          </Link>
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <span className="text-xs font-semibold text-muted-foreground">Appearance</span>
+            <ThemeToggle showLabel />
+          </div>
+
+          {NAV_LINKS.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-foreground hover:text-primary transition"
+            >
+              {link.label}
+            </Link>
+          ))}
+
           <Link
             href="/artist/dashboard"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-amber-600"
+            className="block py-2 text-sm font-medium text-amber-600 dark:text-amber-400"
           >
-            Artist Studio & Orders
+            Artist Studio &amp; Orders
           </Link>
           <Link
             href="/admin/dashboard"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-purple-600"
+            className="block py-2 text-sm font-medium text-purple-600 dark:text-purple-400"
           >
             Admin Management
           </Link>

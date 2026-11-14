@@ -10,6 +10,7 @@ import {
 } from '@/lib/mock-data';
 import { formatINR, formatDate } from '@/lib/utils';
 import { Order } from '@/types';
+import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
   Palette,
   Package,
@@ -147,11 +148,11 @@ export default function ArtistDashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
       {/* Dashboard Top Header */}
-      <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center justify-center font-serif text-2xl font-bold">
+          <div className="w-16 h-16 rounded-2xl bg-purple-500/10 text-purple-700 dark:text-purple-300 flex items-center justify-center font-serif text-2xl font-bold">
             <Palette className="w-8 h-8" />
           </div>
           <div>
@@ -159,19 +160,19 @@ export default function ArtistDashboardPage() {
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
                 Artist Studio &amp; Listing Dashboard
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+              <span className={STYLE_CLASSES.badges.verifiedGreen}>
                 KYC Verified
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Logged in as: <strong>{activeArtistProfile?.displayName || 'Meera Nambiar'}</strong> &bull; Bank: HDFC Bank (••4492) &bull; 20% Standard Platform Commission Split
+              Logged in as: <strong>{activeArtistProfile?.displayName || 'Meera Nambiar'}</strong> &bull; Bank: HDFC Bank (••4492) &bull; {APP_CONFIG.financial.defaultCommissionPercent}% Standard Platform Commission Split
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setActiveTab('new-listing')}
-          className="px-5 py-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow-sm flex items-center gap-2 shrink-0"
+          className={STYLE_CLASSES.buttons.primary}
         >
           <PlusCircle className="w-4 h-4" />
           Create New Artwork Listing
@@ -180,29 +181,29 @@ export default function ArtistDashboardPage() {
 
       {/* Financial Overview Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-2">
+        <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
           <span className="text-xs text-muted-foreground font-medium">Gross Artwork Sales</span>
           <p className="font-serif text-2xl font-bold text-foreground">₹2,84,000</p>
-          <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" /> +18% from last month
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-2">
-          <span className="text-xs text-muted-foreground font-medium">Platform Commission (20%)</span>
+        <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
+          <span className="text-xs text-muted-foreground font-medium">Platform Commission ({APP_CONFIG.financial.defaultCommissionPercent}%)</span>
           <p className="font-serif text-2xl font-bold text-foreground">₹56,800</p>
           <p className="text-[11px] text-muted-foreground">Standard curated marketplace fee</p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-2">
-          <span className="text-xs text-muted-foreground font-medium">TDS Deducted (1% u/s 194-O)</span>
+        <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
+          <span className="text-xs text-muted-foreground font-medium">TDS Deducted ({APP_CONFIG.financial.tdsSection194OPercent}% u/s 194-O)</span>
           <p className="font-serif text-2xl font-bold text-foreground">₹2,840</p>
           <p className="text-[11px] text-muted-foreground">Remitted to IT Dept (Form 26AS)</p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-2 bg-primary/5 border-primary/20">
-          <span className="text-xs text-primary font-bold">Net Cleared Studio Payout</span>
-          <p className="font-serif text-2xl font-bold text-primary">₹2,24,360</p>
+        <div className="bg-card dark:bg-gradient-to-br dark:from-purple-950/20 dark:to-blue-950/20 border border-primary/20 dark:border-purple-500/30 rounded-2xl p-5 space-y-2 shadow-2xs">
+          <span className="text-xs text-primary dark:text-purple-300 font-bold">Net Cleared Studio Payout</span>
+          <p className="font-serif text-2xl font-bold text-primary dark:text-purple-400">₹2,24,360</p>
           <p className="text-[11px] text-muted-foreground">Transferred to Bank Account</p>
         </div>
       </div>
@@ -213,7 +214,7 @@ export default function ArtistDashboardPage() {
           onClick={() => setActiveTab('listings')}
           className={`pb-2 px-3 border-b-2 transition ${
             activeTab === 'listings'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -224,7 +225,7 @@ export default function ArtistDashboardPage() {
           onClick={() => setActiveTab('new-listing')}
           className={`pb-2 px-3 border-b-2 transition ${
             activeTab === 'new-listing'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -235,7 +236,7 @@ export default function ArtistDashboardPage() {
           onClick={() => setActiveTab('orders')}
           className={`pb-2 px-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'orders'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -246,7 +247,7 @@ export default function ArtistDashboardPage() {
           onClick={() => setActiveTab('ledger')}
           className={`pb-2 px-3 border-b-2 transition ${
             activeTab === 'ledger'
-              ? 'border-primary text-primary'
+              ? 'border-primary dark:border-purple-500 text-primary dark:text-purple-300'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -265,7 +266,7 @@ export default function ArtistDashboardPage() {
 
       {/* TAB 1: LISTINGS VIEW */}
       {activeTab === 'listings' && (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
+        <div className={STYLE_CLASSES.tables.container}>
           <div className="p-5 border-b border-border flex items-center justify-between">
             <h3 className="font-serif font-bold text-base text-foreground">
               Current Studio Listings
@@ -276,8 +277,8 @@ export default function ArtistDashboardPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
+            <table className={STYLE_CLASSES.tables.table}>
+              <thead className={STYLE_CLASSES.tables.thead}>
                 <tr>
                   <th className="py-3 px-4">Artwork</th>
                   <th className="py-3 px-4">Medium &amp; Surface</th>
@@ -291,7 +292,7 @@ export default function ArtistDashboardPage() {
                 {artistArtworks.map(art => {
                   const orig = art.variants.find(v => v.type === 'ORIGINAL') || art.variants[0];
                   return (
-                    <tr key={art.id} className="hover:bg-muted/20">
+                    <tr key={art.id} className={STYLE_CLASSES.tables.row}>
                       <td className="py-3.5 px-4 flex items-center gap-3">
                         <img
                           src={art.images[0]}
@@ -308,11 +309,11 @@ export default function ArtistDashboardPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         {art.minPrintPrice ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-700 dark:text-purple-300">
+                          <span className={STYLE_CLASSES.badges.printPurple}>
                             Original + Prints
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          <span className={STYLE_CLASSES.badges.originalGold}>
                             1-of-1 Original
                           </span>
                         )}
@@ -626,7 +627,7 @@ export default function ArtistDashboardPage() {
 
       {/* TAB 4: LEDGER VIEW */}
       {activeTab === 'ledger' && (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs">
+        <div className={STYLE_CLASSES.tables.container}>
           <div className="p-5 border-b border-border flex items-center justify-between">
             <h3 className="font-serif font-bold text-base text-foreground">
               Earnings &amp; Split Settlement Ledger
@@ -637,30 +638,30 @@ export default function ArtistDashboardPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
+            <table className={STYLE_CLASSES.tables.table}>
+              <thead className={STYLE_CLASSES.tables.thead}>
                 <tr>
-                  <th className="py-3 px-4">Order Ref</th>
-                  <th className="py-3 px-4">Gross Sale</th>
-                  <th className="py-3 px-4">Platform Fee (20%)</th>
-                  <th className="py-3 px-4">TDS (1%)</th>
-                  <th className="py-3 px-4">Net Payout</th>
-                  <th className="py-3 px-4">Escrow Status</th>
+                  <th className={STYLE_CLASSES.tables.th}>Order Ref</th>
+                  <th className={STYLE_CLASSES.tables.th}>Gross Sale</th>
+                  <th className={STYLE_CLASSES.tables.th}>Platform Fee ({APP_CONFIG.financial.defaultCommissionPercent}%)</th>
+                  <th className={STYLE_CLASSES.tables.th}>TDS ({APP_CONFIG.financial.tdsSection194OPercent}%)</th>
+                  <th className={STYLE_CLASSES.tables.th}>Net Payout</th>
+                  <th className={STYLE_CLASSES.tables.th}>Escrow Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {mockPayouts.map(p => (
-                  <tr key={p.id} className="hover:bg-muted/20">
-                    <td className="py-3.5 px-4 font-mono font-bold text-foreground">
+                  <tr key={p.id} className={STYLE_CLASSES.tables.row}>
+                    <td className={STYLE_CLASSES.tables.td + " font-mono font-bold text-foreground"}>
                       #{p.orderId}
                     </td>
-                    <td className="py-3.5 px-4 font-serif font-bold">{formatINR(p.grossSaleAmount)}</td>
-                    <td className="py-3.5 px-4 text-muted-foreground">{formatINR(p.platformCommissionAmount)}</td>
-                    <td className="py-3.5 px-4 text-muted-foreground">{formatINR(p.tdsAmount)}</td>
-                    <td className="py-3.5 px-4 font-serif font-bold text-primary">
+                    <td className={STYLE_CLASSES.tables.td + " font-serif font-bold"}>{formatINR(p.grossSaleAmount)}</td>
+                    <td className={STYLE_CLASSES.tables.td + " text-muted-foreground"}>{formatINR(p.platformCommissionAmount)}</td>
+                    <td className={STYLE_CLASSES.tables.td + " text-muted-foreground"}>{formatINR(p.tdsAmount)}</td>
+                    <td className={STYLE_CLASSES.tables.td + " font-serif font-bold text-primary dark:text-purple-400"}>
                       {formatINR(p.netPayoutAmount)}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className={STYLE_CLASSES.tables.td}>
                       {p.status === 'TRANSFERRED' && (
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                           Settled to Bank
@@ -668,7 +669,7 @@ export default function ArtistDashboardPage() {
                       )}
                       {p.status === 'HELD_IN_ESCROW' && (
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                          Held (7-Day Window)
+                          Held ({APP_CONFIG.financial.escrowHoldingDays}-Day Window)
                         </span>
                       )}
                       {p.status === 'READY_FOR_SETTLEMENT' && (

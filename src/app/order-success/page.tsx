@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
   CheckCircle2,
   ShieldCheck,
@@ -99,11 +100,11 @@ function OrderSuccessContent() {
       </div>
 
       {/* Verifiable Digital Certificate of Authenticity (COA) Preview */}
-      <div className="bg-card border-2 border-primary/30 rounded-3xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
+      <div className="bg-card dark:bg-gradient-to-br dark:from-slate-900 dark:via-purple-950/20 dark:to-blue-950/20 border-2 border-primary/30 dark:border-purple-600/40 rounded-3xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
         {/* Certificate Watermark / Header */}
-        <div className="border-b-2 border-primary/20 pb-6 flex items-start justify-between">
+        <div className="border-b-2 border-primary/20 dark:border-purple-600/30 pb-6 flex items-start justify-between">
           <div className="space-y-1">
-            <span className="text-[11px] font-bold tracking-widest uppercase text-primary">
+            <span className="text-[11px] font-bold tracking-widest uppercase text-primary dark:text-purple-400">
               Official Provenance Document
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl font-black text-foreground tracking-tight">
@@ -158,9 +159,9 @@ function OrderSuccessContent() {
         </div>
 
         {/* Certificate Signatures and Actions */}
-        <div className="pt-6 border-t-2 border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="pt-6 border-t-2 border-primary/20 dark:border-purple-600/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -171,13 +172,13 @@ function OrderSuccessContent() {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-semibold flex items-center gap-1.5 transition"
+              className={STYLE_CLASSES.buttons.outline}
             >
               <Printer className="w-3.5 h-3.5" /> Print Certificate
             </button>
             <button
               onClick={() => alert('Certificate PDF successfully downloaded!')}
-              className="px-4 py-2 rounded-xl bg-foreground text-background hover:bg-foreground/90 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+              className={STYLE_CLASSES.buttons.primary}
             >
               <Download className="w-3.5 h-3.5" /> Download PDF
             </button>
@@ -189,7 +190,7 @@ function OrderSuccessContent() {
       <div className="text-center pt-4">
         <Link
           href="/artworks"
-          className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
+          className="inline-flex items-center gap-2 text-xs font-bold text-primary dark:text-purple-400 hover:underline"
         >
           Explore More Artworks in Gallery &rarr;
         </Link>

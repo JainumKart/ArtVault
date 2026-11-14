@@ -11,6 +11,7 @@ import { Artwork, ArtworkMedium, ArtworkStyle } from '@/types';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/lib/cart-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
+import { STYLE_CLASSES } from '@/constants';
 import {
   Search,
   SlidersHorizontal,
@@ -111,14 +112,14 @@ export default function ArtworksPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
       {/* Page Header */}
-      <div className="border-b border-border pb-6">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">Catalog Archive</span>
+      <div className={STYLE_CLASSES.layout.pageHeader}>
+        <span className={STYLE_CLASSES.typography.eyebrow}>Catalog Archive</span>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mt-1">
           Explore Fine Artworks &amp; Original Masterpieces
         </h1>
-        <p className="text-sm text-muted-foreground mt-2 max-w-2xl leading-relaxed">
+        <p className={STYLE_CLASSES.typography.sectionSubtitle}>
           Filter through 1-of-1 paintings, limited edition cotton-rag prints, and fine charcoal sketches.
           Every piece is accompanied by a tamper-proof digital Certificate of Authenticity.
         </p>
@@ -134,7 +135,7 @@ export default function ArtworksPage() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by title, artist, or medium..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 transition placeholder:text-muted-foreground"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 dark:focus:ring-purple-500/40 transition placeholder:text-muted-foreground"
           />
           {searchQuery && (
             <button
@@ -152,7 +153,7 @@ export default function ArtworksPage() {
             onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
             className="md:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border text-sm font-semibold text-foreground hover:bg-muted"
           >
-            <SlidersHorizontal className="w-4 h-4 text-primary" />
+            <SlidersHorizontal className="w-4 h-4 text-primary dark:text-purple-400" />
             Filters
           </button>
 
@@ -161,7 +162,7 @@ export default function ArtworksPage() {
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value as any)}
-              className="px-3.5 py-2.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+              className="px-3.5 py-2.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/40 dark:focus:ring-purple-500/40"
             >
               <option value="featured">Curator’s Picks</option>
               <option value="price-asc">Price: Low to High</option>
@@ -178,16 +179,16 @@ export default function ArtworksPage() {
         <aside
           className={`lg:block ${
             isMobileFiltersOpen ? 'block' : 'hidden'
-          } space-y-6 bg-card border border-border rounded-2xl p-6 h-fit`}
+          } space-y-6 bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-6 h-fit shadow-xs`}
         >
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <h3 className="font-serif font-bold text-base text-foreground flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-primary" />
+              <SlidersHorizontal className="w-4 h-4 text-primary dark:text-purple-400" />
               Filter By
             </h3>
             <button
               onClick={clearAllFilters}
-              className="text-xs text-primary font-semibold hover:underline"
+              className="text-xs text-primary dark:text-purple-400 font-semibold hover:underline"
             >
               Reset
             </button>
@@ -209,8 +210,8 @@ export default function ArtworksPage() {
                   onClick={() => setSelectedType(opt.value)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                     selectedType === opt.value
-                      ? 'bg-primary text-primary-foreground font-semibold'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                      : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                   }`}
                 >
                   {opt.label}
@@ -229,8 +230,8 @@ export default function ArtworksPage() {
                 onClick={() => setSelectedMedium('ALL')}
                 className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                   selectedMedium === 'ALL'
-                    ? 'bg-primary text-primary-foreground font-semibold'
-                    : 'text-foreground hover:bg-muted'
+                    ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                    : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                 }`}
               >
                 All Mediums
@@ -241,8 +242,8 @@ export default function ArtworksPage() {
                   onClick={() => setSelectedMedium(m)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                     selectedMedium === m
-                      ? 'bg-primary text-primary-foreground font-semibold'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                      : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                   }`}
                 >
                   {m}
@@ -261,8 +262,8 @@ export default function ArtworksPage() {
                 onClick={() => setSelectedStyle('ALL')}
                 className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                   selectedStyle === 'ALL'
-                    ? 'bg-primary text-primary-foreground font-semibold'
-                    : 'text-foreground hover:bg-muted'
+                    ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                    : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                 }`}
               >
                 All Styles
@@ -273,8 +274,8 @@ export default function ArtworksPage() {
                   onClick={() => setSelectedStyle(s)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                     selectedStyle === s
-                      ? 'bg-primary text-primary-foreground font-semibold'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                      : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                   }`}
                 >
                   {s}
@@ -301,8 +302,8 @@ export default function ArtworksPage() {
                   onClick={() => setPriceRange(p.value)}
                   className={`w-full text-left px-3 py-1.5 rounded-lg transition ${
                     priceRange === p.value
-                      ? 'bg-primary text-primary-foreground font-semibold'
-                      : 'text-foreground hover:bg-muted'
+                      ? 'bg-primary dark:bg-purple-600 text-primary-foreground font-semibold shadow-xs'
+                      : 'text-foreground hover:bg-muted dark:hover:bg-purple-950/30'
                   }`}
                 >
                   {p.label}
@@ -319,7 +320,7 @@ export default function ArtworksPage() {
             {(selectedMedium !== 'ALL' || selectedStyle !== 'ALL' || selectedType !== 'ALL' || priceRange !== 'ALL' || searchQuery) && (
               <button
                 onClick={clearAllFilters}
-                className="text-primary font-bold hover:underline"
+                className="text-primary dark:text-purple-400 font-bold hover:underline"
               >
                 Clear all active filters
               </button>
@@ -327,15 +328,15 @@ export default function ArtworksPage() {
           </div>
 
           {filteredArtworks.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-12 text-center space-y-4">
+            <div className="bg-card dark:bg-card/70 border border-border dark:border-purple-900/30 rounded-2xl p-12 text-center space-y-4">
               <Sparkles className="w-10 h-10 text-muted-foreground mx-auto stroke-1" />
               <h3 className="font-serif text-lg font-bold text-foreground">No artworks match your criteria</h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              <p className={STYLE_CLASSES.typography.bodySmall + " max-w-sm mx-auto"}>
                 Try clearing or loosening your filters, or search for another artist or medium.
               </p>
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                className={STYLE_CLASSES.buttons.primary + " mx-auto"}
               >
                 Reset All Filters
               </button>
@@ -344,12 +345,11 @@ export default function ArtworksPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredArtworks.map(artwork => {
                 const originalVariant = artwork.variants.find(v => v.type === 'ORIGINAL') || artwork.variants[0];
-                const printVariant = artwork.variants.find(v => v.type === 'LIMITED_PRINT');
 
                 return (
                   <div
                     key={artwork.id}
-                    className="bg-card border border-border rounded-2xl overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col group"
+                    className={STYLE_CLASSES.cards.interactive}
                   >
                     {/* Artwork Image */}
                     <div className="relative aspect-4/5 overflow-hidden bg-muted">
@@ -364,12 +364,12 @@ export default function ArtworksPage() {
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                         {artwork.isOriginalAvailable && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/90 text-zinc-950 backdrop-blur-xs">
+                          <span className={STYLE_CLASSES.badges.originalGold}>
                             1-of-1 Original
                           </span>
                         )}
                         {artwork.minPrintPrice && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-900/85 text-zinc-100 backdrop-blur-xs border border-white/20">
+                          <span className={STYLE_CLASSES.badges.printPurple}>
                             Limited Edition
                           </span>
                         )}
@@ -378,7 +378,7 @@ export default function ArtworksPage() {
                       {/* View in Room Quick Icon */}
                       <button
                         onClick={() => setVisualizerArtwork(artwork)}
-                        className="absolute bottom-3 right-3 p-2 rounded-xl bg-card/90 text-foreground hover:bg-card hover:text-primary transition shadow-md backdrop-blur-md border border-border/80"
+                        className="absolute bottom-3 right-3 p-2 rounded-xl bg-card/90 text-foreground hover:bg-card hover:text-primary dark:hover:text-purple-400 transition shadow-md backdrop-blur-md border border-border/80"
                         title="Preview on your wall"
                       >
                         <Eye className="w-4 h-4" />
@@ -396,7 +396,7 @@ export default function ArtworksPage() {
                         </div>
 
                         <Link href={`/artworks/${artwork.id}`}>
-                          <h3 className="font-serif text-base font-bold text-foreground group-hover:text-primary transition line-clamp-1">
+                          <h3 className={STYLE_CLASSES.typography.cardTitle + " text-base line-clamp-1"}>
                             {artwork.title}
                           </h3>
                         </Link>
@@ -428,7 +428,7 @@ export default function ArtworksPage() {
                             addItem(artwork, originalVariant, standardFramingOptions[0]);
                             openCart();
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow-xs flex items-center gap-1"
+                          className={STYLE_CLASSES.buttons.primary + " px-3 py-1.5 text-xs"}
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
                           Acquire

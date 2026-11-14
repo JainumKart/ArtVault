@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { ThemeProvider } from '@/lib/theme-context';
 import { AuthProvider } from '@/lib/auth-context';
 import { CartProvider } from '@/lib/cart-context';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import { APP_CONFIG } from '@/constants';
 
 export const metadata: Metadata = {
-  title: 'ArtVault — India’s Curated Fine Art & Original Masterpiece Marketplace',
+  title: `${APP_CONFIG.name} — ${APP_CONFIG.tagline}`,
   description:
     'Discover authentic 1-of-1 original fine art, certified museum prints, and direct artist collaborations with verifiable Certificates of Authenticity and white-glove scheduled courier pickup.',
 };
@@ -19,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -29,15 +31,17 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased bg-background text-foreground flex flex-col min-h-screen">
-        <AuthProvider>
-          <CartProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <AuthModal />
-            <CartDrawer />
-          </CartProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <AuthModal />
+              <CartDrawer />
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

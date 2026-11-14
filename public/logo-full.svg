@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 160" width="100%" height="100%">
+  <defs>
+    <!-- Rich Gold Gradient -->
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE59F" />
+      <stop offset="35%" stop-color="#D9A934" />
+      <stop offset="70%" stop-color="#B8851C" />
+      <stop offset="100%" stop-color="#8C5F0F" />
+    </linearGradient>
+
+    <!-- Highlight Gold -->
+    <linearGradient id="brightGold" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C69425" />
+      <stop offset="50%" stop-color="#FFF2BF" />
+      <stop offset="100%" stop-color="#C69425" />
+    </linearGradient>
+
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181B24" />
+      <stop offset="100%" stop-color="#0B0D12" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left Icon Emblem (size 120x120, centered at x=80, y=80) -->
+  <g transform="translate(20, 20)">
+    <!-- Obsidian Rounded Tile -->
+    <rect x="0" y="0" width="120" height="120" rx="26" fill="url(#iconBg)" stroke="url(#gold)" stroke-width="1.8" />
+
+    <!-- Outer Picture Frame -->
+    <rect x="12" y="12" width="96" height="96" rx="14" fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.85" />
+    <rect x="18" y="18" width="84" height="84" rx="10" fill="none" stroke="url(#gold)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.4" />
+
+    <!-- Vault Wheel & Bolts -->
+    <circle cx="60" cy="60" r="34" fill="none" stroke="url(#gold)" stroke-width="2" />
+    <circle cx="60" cy="60" r="28" fill="#11131A" stroke="url(#brightGold)" stroke-width="1" />
+
+    <!-- 8 Vault Locking Bolts -->
+    <g stroke="url(#gold)" stroke-width="2.2" stroke-linecap="round">
+      <line x1="60" y1="28" x2="60" y2="22" />
+      <line x1="60" y1="92" x2="60" y2="98" />
+      <line x1="28" y1="60" x2="22" y2="60" />
+      <line x1="92" y1="60" x2="98" y2="60" />
+      <line x1="38" y1="38" x2="33" y2="33" />
+      <line x1="82" y1="82" x2="87" y2="87" />
+      <line x1="38" y1="82" x2="33" y2="87" />
+      <line x1="82" y1="38" x2="87" y2="33" />
+    </g>
+
+    <!-- Combination Dial -->
+    <circle cx="60" cy="60" r="21" fill="url(#iconBg)" stroke="url(#gold)" stroke-width="1.5" />
+    <circle cx="60" cy="60" r="17" fill="none" stroke="url(#brightGold)" stroke-width="0.8" stroke-dasharray="1.5 4" opacity="0.7" />
+
+    <!-- Interlocking A (Easel) + V (Vault) -->
+    <path d="M60 44 L50 70 L53 70 L56 63 L64 63 L67 70 L70 70 Z" fill="url(#brightGold)" />
+    <path d="M51 55 L60 77 L69 55 L65 55 L60 69 L55 55 Z" fill="url(#gold)" opacity="0.9" />
+    <circle cx="60" cy="60" r="2.2" fill="#FFF2BF" />
+  </g>
+
+  <!-- Typography: "ArtVault" + Subtitle -->
+  <g transform="translate(165, 0)">
+    <!-- "Art" in Classical Serif Style -->
+    <text x="0" y="88" font-family="'Playfair Display', Georgia, serif" font-size="62" font-weight="700" fill="#F4F4F6" letter-spacing="-1">
+      Art<tspan font-family="'Playfair Display', Georgia, serif" font-weight="400" font-style="italic" fill="url(#gold)">Vault</tspan>
+    </text>
+
+    <!-- Subtle Premium Dot / Badge -->
+    <circle cx="282" cy="58" r="4" fill="url(#brightGold)" />
+
+    <!-- Tagline: Fine Art Escrow & Provenance Registry -->
+    <text x="3" y="118" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="url(#gold)" letter-spacing="4">
+      FINE ART ESCROW &amp; PROVENANCE REGISTRY
+    </text>
+
+    <!-- Accent Underline Rule -->
+    <line x1="3" y1="130" x2="385" y2="130" stroke="url(#gold)" stroke-width="1" opacity="0.3" />
+  </g>
+</svg>

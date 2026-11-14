@@ -3,14 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { mockCategories, mockArtworks } from '@/lib/mock-data';
+import { STYLE_CLASSES } from '@/constants';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 export default function CategoriesPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+    <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-12"}>
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">Mediums &amp; Disciplines</span>
+        <span className={STYLE_CLASSES.typography.eyebrow}>Mediums &amp; Disciplines</span>
         <h1 className="font-serif text-4xl sm:text-5xl font-bold text-foreground">
           Curated Fine Art Categories
         </h1>
@@ -30,7 +31,7 @@ export default function CategoriesPage() {
           return (
             <div
               key={category.id}
-              className="bg-card border border-border rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group"
+              className={STYLE_CLASSES.cards.interactive + " rounded-3xl overflow-hidden"}
             >
               {/* Category Cover */}
               <div className="relative aspect-16/9 overflow-hidden bg-muted">
@@ -91,7 +92,7 @@ export default function CategoriesPage() {
                 <div className="pt-3 border-t border-border">
                   <Link
                     href={`/artworks?medium=${encodeURIComponent(category.name.includes('Oil') ? 'Oil on Canvas' : category.name.includes('Acrylic') ? 'Acrylic on Canvas' : category.name.includes('Charcoal') ? 'Charcoal & Graphite' : '')}`}
-                    className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline group-hover:translate-x-1 transition"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-primary dark:text-purple-400 hover:underline group-hover:translate-x-1 transition"
                   >
                     Browse all {category.name} <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
