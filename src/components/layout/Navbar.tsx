@@ -177,7 +177,7 @@ export function Navbar() {
                     </div>
 
                     <Link
-                      href="/profile"
+                      href="/collector-vault"
                       onClick={() => setIsProfileDropdownOpen(false)}
                       className="block px-3 py-2 text-foreground hover:bg-muted transition"
                     >
@@ -258,19 +258,32 @@ export function Navbar() {
           ))}
 
           <Link
-            href="/artist/dashboard"
+            href="/collector-vault"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-amber-600 dark:text-amber-400"
+            className="block py-2 text-sm font-medium text-foreground hover:text-primary transition"
           >
-            Artist Studio &amp; Orders
+            Collector Vault
           </Link>
-          <Link
-            href="/admin/dashboard"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-purple-600 dark:text-purple-400"
-          >
-            Admin Management
-          </Link>
+
+          {role === 'ARTIST' && (
+            <Link
+              href="/artist/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-amber-600 dark:text-amber-400"
+            >
+              Artist Studio &amp; Orders
+            </Link>
+          )}
+
+          {role === 'ADMIN' && (
+            <Link
+              href="/admin/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block py-2 text-sm font-medium text-purple-600 dark:text-purple-400"
+            >
+              Admin Command Desk
+            </Link>
+          )}
         </div>
       )}
     </header>

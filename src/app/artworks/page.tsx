@@ -28,6 +28,7 @@ export default function ArtworksPage() {
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedMedium, setSelectedMedium] = useState<string>('ALL');
   const [selectedStyle, setSelectedStyle] = useState<string>('ALL');
   const [selectedType, setSelectedType] = useState<string>('ALL'); // 'ALL' | 'ORIGINAL' | 'PRINT'
@@ -56,6 +57,11 @@ export default function ArtworksPage() {
 
   const filteredArtworks = useMemo(() => {
     return mockArtworks.filter(artwork => {
+      // Category filter
+      if (selectedCategory !== 'ALL' && artwork.categoryId !== selectedCategory) {
+        return false;
+      }
+
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -100,10 +106,11 @@ export default function ArtworksPage() {
       if (sortBy === 'newest') return b.year - a.year;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [searchQuery, selectedMedium, selectedStyle, selectedType, priceRange, sortBy]);
+  }, [searchQuery, selectedCategory, selectedMedium, selectedStyle, selectedType, priceRange, sortBy]);
 
   const clearAllFilters = () => {
     setSearchQuery('');
+    setSelectedCategory('ALL');
     setSelectedMedium('ALL');
     setSelectedStyle('ALL');
     setSelectedType('ALL');
@@ -123,6 +130,47 @@ export default function ArtworksPage() {
           Filter through 1-of-1 paintings, limited edition cotton-rag prints, and fine charcoal sketches.
           Every piece is accompanied by a tamper-proof digital Certificate of Authenticity.
         </p>
+      </div>
+
+      {/* Category Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <button
+          onClick={() => {
+            setSelectedCategory('ALL');
+            setSelectedMedium('ALL');
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            selectedCategory === 'ALL'
+              ? 'bg-foreground text-background shadow-xs'
+              : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          All Pieces ({mockArtworks.length})
+        </button>
+
+        {mockCategories.map(cat => {
+          const count = mockArtworks.filter(a => a.categoryId === cat.id).length;
+          const isSelected = selectedCategory === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => {
+                setSelectedCategory(cat.id);
+                setSelectedMedium('ALL');
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-primary dark:bg-purple-600 text-white shadow-xs'
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>{cat.name}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Top Search & Filter Bar */}

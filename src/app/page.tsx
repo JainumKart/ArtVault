@@ -115,6 +115,7 @@ export default function HomePage() {
                       <img
                         src={featuredArtworks[0].images[0]}
                         alt={featuredArtworks[0].title}
+                        loading="eager"
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                       />
                       <div className="absolute top-4 left-4">
@@ -186,7 +187,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {mockCategories.map(cat => (
             <Link
               key={cat.id}
@@ -196,6 +197,7 @@ export default function HomePage() {
               <img
                 src={cat.imageUrl}
                 alt={cat.name}
+                loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3.5 flex flex-col justify-end text-white">
@@ -239,6 +241,7 @@ export default function HomePage() {
                     <img
                       src={artwork.images[0]}
                       alt={artwork.title}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
                   </Link>
@@ -429,6 +432,7 @@ export default function HomePage() {
                 <img
                   src={artist.avatarUrl}
                   alt={artist.displayName}
+                  loading="lazy"
                   className="w-16 h-16 rounded-full object-cover border-2 border-primary/30 dark:border-purple-500/40"
                 />
                 <div>

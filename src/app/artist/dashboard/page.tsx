@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
   mockArtworks,
@@ -26,11 +27,57 @@ import {
   Calendar,
   Layers,
   Sparkles,
+  Lock,
 } from 'lucide-react';
 
 export default function ArtistDashboardPage() {
-  const { user, activeArtistProfile, setRole } = useAuth();
+  const { user, role, activeArtistProfile, setRole } = useAuth();
   const [activeTab, setActiveTab] = useState<'listings' | 'new-listing' | 'orders' | 'ledger'>('listings');
+
+  // Enforce Authorization: Never render private listings, bank accounts, or orders if not ARTIST or ADMIN
+  if (!user || (role !== 'ARTIST' && role !== 'ADMIN')) {
+    return (
+      <div className={STYLE_CLASSES.layout.pageContainer + " py-20"}>
+        <div className="max-w-xl mx-auto bg-card border border-border dark:border-purple-900/40 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className={STYLE_CLASSES.typography.eyebrow}>Artist Portal</span>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+              Artist Studio Portal
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Manage your catalog listings, dispatch scheduled studio pickups, and review GST/TDS payout ledgers. Authorized artist credentials are required to access this dashboard.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+            Current status:{' '}
+            <span className="font-semibold text-foreground">
+              {user ? `Signed in as ${user.name} (${role})` : 'Unauthenticated Visitor'}
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setRole('ARTIST')}
+              className={STYLE_CLASSES.buttons.primary + " w-full sm:w-auto px-6 py-3 text-xs"}
+            >
+              Sign in with Demo Artist Account (Meera Nambiar)
+            </button>
+            <Link
+              href="/sell"
+              className={STYLE_CLASSES.buttons.secondary + " w-full sm:w-auto px-6 py-3 text-xs"}
+            >
+              Apply to Join as an Artist
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter artworks for this artist
   const artistId = activeArtistProfile?.id || 'artist-1';

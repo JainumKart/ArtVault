@@ -45,7 +45,7 @@ export const mockCategories: Category[] = [
     slug: 'oil-paintings',
     description: 'Rich, layered, and timeless masterpieces on Belgian linen and canvas.',
     imageUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 38,
+    artworkCount: 2,
   },
   {
     id: 'cat-acrylics',
@@ -53,7 +53,7 @@ export const mockCategories: Category[] = [
     slug: 'acrylics',
     description: 'Vibrant colors, bold textures, and dynamic contemporary compositions.',
     imageUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 45,
+    artworkCount: 1,
   },
   {
     id: 'cat-sketches',
@@ -61,15 +61,7 @@ export const mockCategories: Category[] = [
     slug: 'charcoal-sketches',
     description: 'Raw, visceral human studies and architectural drawings with deep chiaroscuro.',
     imageUrl: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 29,
-  },
-  {
-    id: 'cat-watercolors',
-    name: 'Watercolors',
-    slug: 'watercolors',
-    description: 'Luminous washes and delicate brushwork on 300gsm cold-pressed Arches paper.',
-    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 24,
+    artworkCount: 1,
   },
   {
     id: 'cat-heritage',
@@ -77,15 +69,7 @@ export const mockCategories: Category[] = [
     slug: 'heritage-folk',
     description: 'Contemporary interpretations of Pichwai, Madhubani, Gond, and miniature traditions.',
     imageUrl: 'https://images.unsplash.com/photo-1582561424760-0321d75e81fa?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 32,
-  },
-  {
-    id: 'cat-sculptures',
-    name: 'Sculptures & Terracotta',
-    slug: 'sculptures',
-    description: 'Three-dimensional artistic tactile expressions in bronze, stone, and clay.',
-    imageUrl: 'https://images.unsplash.com/photo-1561839561-b13bcfe95249?auto=format&fit=crop&w=800&q=80',
-    artworkCount: 16,
+    artworkCount: 1,
   },
 ];
 
@@ -203,8 +187,6 @@ export const mockArtworks: Artwork[] = [
     year: 2024,
     images: [
       'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1400&q=85',
-      'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1400&q=85',
-      'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=1400&q=85',
     ],
     variants: [
       {

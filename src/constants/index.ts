@@ -51,7 +51,8 @@ export const INDIAN_STATES = [
 ] as const;
 
 export const NAV_LINKS = [
-  { href: '/artworks', label: 'Explore Artworks' },
-  { href: '/categories', label: 'Categories' },
-  { href: '/artists', label: 'Featured Artists' },
+  { href: '/artworks', label: 'Explore Art' },
+  { href: '/artists', label: 'Artists' },
+  { href: '/trust', label: 'Trust & Safety' },
+  { href: '/sell', label: 'Sell Your Art' },
 ] as const;
