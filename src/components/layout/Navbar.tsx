@@ -16,14 +16,15 @@ import {
   ChevronDown,
   Menu,
   X,
+  LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 
 export function Navbar() {
-  const { user, role, setRole, openAuthModal, logout } = useAuth();
+  const { user, role, openAuthModal, logout } = useAuth();
   const { itemCount, openCart } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md transition-colors duration-200">
@@ -55,6 +56,7 @@ export function Navbar() {
                 </Link>
               ))}
 
+              {/* Show Artist Studio link ONLY if authenticated as ARTIST */}
               {role === 'ARTIST' && (
                 <Link
                   href="/artist/dashboard"
@@ -64,6 +66,7 @@ export function Navbar() {
                 </Link>
               )}
 
+              {/* Show Admin Portal link ONLY if authenticated as ADMIN */}
               {role === 'ADMIN' && (
                 <Link
                   href="/admin/dashboard"
@@ -75,68 +78,10 @@ export function Navbar() {
             </nav>
           </div>
 
-          {/* Right Action Icons, Theme Switcher & Persona Switcher */}
+          {/* Right Action Icons & Auth Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Theme Toggle (Light / Dark) */}
             <ThemeToggle />
-
-            {/* Interactive Role Switcher Pill */}
-            <div className="relative">
-              <button
-                onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                className={`hidden lg:flex ${STYLE_CLASSES.badges.rolePill}`}
-                title="Switch platform test role"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-muted-foreground">Viewing:</span>
-                <span className="text-foreground capitalize font-semibold">{role.toLowerCase()}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-
-              {isRoleDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-2xl shadow-xl py-1 z-50 text-xs animate-in fade-in zoom-in-95">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
-                    Switch Test Persona
-                  </div>
-                  <button
-                    onClick={() => {
-                      setRole('COLLECTOR');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-muted transition ${
-                      role === 'COLLECTOR' ? 'text-primary font-bold bg-muted/40' : 'text-foreground'
-                    }`}
-                  >
-                    <ShoppingBag className="w-4 h-4 text-primary" />
-                    Collector / Buyer
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRole('ARTIST');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-muted transition ${
-                      role === 'ARTIST' ? 'text-primary font-bold bg-muted/40' : 'text-foreground'
-                    }`}
-                  >
-                    <Palette className="w-4 h-4 text-primary" />
-                    Artist Studio
-                  </button>
-                  <button
-                    onClick={() => {
-                      setRole('ADMIN');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-muted transition ${
-                      role === 'ADMIN' ? 'text-primary font-bold bg-muted/40' : 'text-foreground'
-                    }`}
-                  >
-                    <Shield className="w-4 h-4 text-primary" />
-                    Admin Command
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Cart Trigger Button */}
             <button
@@ -152,57 +97,78 @@ export function Navbar() {
               )}
             </button>
 
-            {/* User Account / Profile Dropdown */}
+            {/* Authenticated User Profile Dropdown vs Guest Sign In/Up */}
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-primary/40 dark:hover:ring-purple-500/40 transition"
+                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-muted border border-border transition"
                 >
                   <img
                     src={user.avatarUrl}
                     alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover border border-border"
+                    className="w-7 h-7 rounded-full object-cover border border-border"
                   />
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="text-xs font-bold text-foreground leading-none truncate max-w-[100px]">
+                      {user.name.split(' ')[0]}
+                    </span>
+                    <span className="text-[10px] font-semibold text-muted-foreground capitalize leading-tight">
+                      {user.role.toLowerCase()}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
                 </button>
 
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in zoom-in-95">
-                    <div className="px-3 py-2 border-b border-border">
-                      <p className="font-semibold text-foreground truncate">{user.name}</p>
+                  <div className="absolute right-0 mt-2 w-60 bg-card border border-border rounded-2xl shadow-xl py-2 z-50 text-xs animate-in fade-in zoom-in-95">
+                    <div className="px-3.5 py-2.5 border-b border-border">
+                      <p className="font-bold text-foreground truncate">{user.name}</p>
                       <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
-                        {user.role}
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${
+                        user.role === 'ADMIN'
+                          ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20'
+                          : user.role === 'ARTIST'
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                          : 'bg-primary/10 text-primary border border-primary/20'
+                      }`}>
+                        {user.role === 'ADMIN' ? 'Platform Administrator' : user.role === 'ARTIST' ? 'Fine Artist' : 'Art Collector'}
                       </span>
                     </div>
 
-                    <Link
-                      href="/collector-vault"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                      className="block px-3 py-2 text-foreground hover:bg-muted transition"
-                    >
-                      Collector Dashboard &amp; COA Vault
-                    </Link>
-
-                    {role === 'ARTIST' && (
+                    {/* Role-Specific Navigation Links */}
+                    <div className="py-1">
                       <Link
-                        href="/artist/dashboard"
+                        href="/collector-vault"
                         onClick={() => setIsProfileDropdownOpen(false)}
-                        className="block px-3 py-2 text-foreground hover:bg-muted transition font-medium text-amber-700 dark:text-amber-300"
+                        className="flex items-center gap-2 px-3.5 py-2 text-foreground hover:bg-muted transition"
                       >
-                        Artist Studio &amp; Orders
+                        <ShieldCheck className="w-4 h-4 text-primary dark:text-purple-400" />
+                        Collector Vault &amp; COAs
                       </Link>
-                    )}
 
-                    {role === 'ADMIN' && (
-                      <Link
-                        href="/admin/dashboard"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="block px-3 py-2 text-foreground hover:bg-muted transition font-medium text-purple-700 dark:text-purple-300"
-                      >
-                        Admin Command Center
-                      </Link>
-                    )}
+                      {user.role === 'ARTIST' && (
+                        <Link
+                          href="/artist/dashboard"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center gap-2 px-3.5 py-2 text-foreground hover:bg-muted transition font-medium text-amber-700 dark:text-amber-300"
+                        >
+                          <Palette className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          Artist Studio &amp; Orders
+                        </Link>
+                      )}
+
+                      {user.role === 'ADMIN' && (
+                        <Link
+                          href="/admin/dashboard"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center gap-2 px-3.5 py-2 text-foreground hover:bg-muted transition font-medium text-purple-700 dark:text-purple-300"
+                        >
+                          <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                          Admin Command Desk
+                        </Link>
+                      )}
+                    </div>
 
                     <div className="border-t border-border mt-1 pt-1">
                       <button
@@ -210,8 +176,9 @@ export function Navbar() {
                           logout();
                           setIsProfileDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-destructive hover:bg-destructive/10 transition"
+                        className="w-full text-left px-3.5 py-2 text-destructive hover:bg-destructive/10 transition flex items-center gap-2"
                       >
+                        <LogOut className="w-3.5 h-3.5" />
                         Sign Out
                       </button>
                     </div>
@@ -219,12 +186,20 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              <button
-                onClick={() => openAuthModal()}
-                className={STYLE_CLASSES.buttons.primary}
-              >
-                Sign In / Join
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openAuthModal('signin')}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-muted transition"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => openAuthModal('signup')}
+                  className={STYLE_CLASSES.buttons.primary + " px-4 py-2 text-xs font-semibold"}
+                >
+                  Sign Up
+                </button>
+              </div>
             )}
 
             {/* Mobile Hamburger */}
@@ -257,32 +232,72 @@ export function Navbar() {
             </Link>
           ))}
 
-          <Link
-            href="/collector-vault"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-sm font-medium text-foreground hover:text-primary transition"
-          >
-            Collector Vault
-          </Link>
+          {user ? (
+            <div className="pt-2 border-t border-border space-y-2">
+              <div className="px-1 py-1">
+                <p className="text-xs font-bold text-foreground">{user.name}</p>
+                <p className="text-[10px] text-muted-foreground">{user.role}</p>
+              </div>
 
-          {role === 'ARTIST' && (
-            <Link
-              href="/artist/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-amber-600 dark:text-amber-400"
-            >
-              Artist Studio &amp; Orders
-            </Link>
-          )}
+              <Link
+                href="/collector-vault"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-2 text-sm font-medium text-foreground hover:text-primary transition"
+              >
+                Collector Vault &amp; COAs
+              </Link>
 
-          {role === 'ADMIN' && (
-            <Link
-              href="/admin/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-sm font-medium text-purple-600 dark:text-purple-400"
-            >
-              Admin Command Desk
-            </Link>
+              {role === 'ARTIST' && (
+                <Link
+                  href="/artist/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 text-sm font-medium text-amber-600 dark:text-amber-400"
+                >
+                  Artist Studio &amp; Orders
+                </Link>
+              )}
+
+              {role === 'ADMIN' && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block py-2 text-sm font-medium text-purple-600 dark:text-purple-400"
+                >
+                  Admin Command Desk
+                </Link>
+              )}
+
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full text-left py-2 text-sm font-medium text-destructive"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-border grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openAuthModal('signin');
+                }}
+                className="py-2.5 rounded-xl border border-border text-xs font-semibold text-center hover:bg-muted"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openAuthModal('signup');
+                }}
+                className={STYLE_CLASSES.buttons.primary + " py-2.5 text-xs text-center"}
+              >
+                Sign Up
+              </button>
+            </div>
           )}
         </div>
       )}

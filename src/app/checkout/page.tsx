@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '@/lib/cart-context';
@@ -28,19 +28,35 @@ export default function CheckoutPage() {
 
   // Address form state
   const defaultAddress = user?.savedAddresses?.[0];
-  const [fullName, setFullName] = useState(defaultAddress?.fullName || user?.name || 'Devika Sharma');
-  const [phone, setPhone] = useState(defaultAddress?.phone || user?.phone || '9820154321');
-  const [streetAddress, setStreetAddress] = useState(
-    defaultAddress?.streetAddress || 'Flat 902, Lodha Bellissimo, NM Joshi Marg'
-  );
-  const [apartment, setApartment] = useState(defaultAddress?.apartment || 'Tower B, 9th Floor');
+  const [fullName, setFullName] = useState(defaultAddress?.fullName || user?.name || '');
+  const [phone, setPhone] = useState(defaultAddress?.phone || user?.phone || '');
+  const [streetAddress, setStreetAddress] = useState(defaultAddress?.streetAddress || '');
+  const [apartment, setApartment] = useState(defaultAddress?.apartment || '');
   const [city, setCity] = useState(defaultAddress?.city || 'Mumbai');
   const [stateName, setStateName] = useState(defaultAddress?.state || 'Maharashtra');
   const [postalCode, setPostalCode] = useState(defaultAddress?.postalCode || '400011');
 
+  // Sync when user logs in
+  useEffect(() => {
+    if (user) {
+      setFullName(prev => prev || user.name);
+      setPhone(prev => prev || user.phone);
+      if (user.savedAddresses?.[0]) {
+        const addr = user.savedAddresses[0];
+        setFullName(addr.fullName);
+        setPhone(addr.phone);
+        setStreetAddress(addr.streetAddress);
+        setApartment(addr.apartment || '');
+        setCity(addr.city);
+        setStateName(addr.state);
+        setPostalCode(addr.postalCode);
+      }
+    }
+  }, [user]);
+
   // Payment selection state
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
-  const [upiVpa, setUpiVpa] = useState('devika@okhdfcbank');
+  const [upiVpa, setUpiVpa] = useState('collector@okaxis');
   const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
   const [cardExpiry, setCardExpiry] = useState('08/28');
   const [cardCvv, setCardCvv] = useState('•••');
@@ -108,6 +124,22 @@ export default function CheckoutPage() {
       <form onSubmit={handleProcessPayment} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Delivery Address & Payment Method (7 cols) */}
         <div className="lg:col-span-7 space-y-8">
+          {!user && (
+            <div className="p-4 rounded-2xl bg-primary/5 dark:bg-purple-950/20 border border-primary/20 dark:border-purple-800/30 flex items-center justify-between gap-4 text-xs">
+              <div>
+                <p className="font-bold text-foreground">Have an ArtVault account?</p>
+                <p className="text-muted-foreground mt-0.5">Sign in to autofill addresses and sync Certificates directly to your Collector Vault.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => openAuthModal('signin')}
+                className="px-4 py-2 rounded-xl bg-card border border-border text-foreground font-semibold hover:bg-muted transition shrink-0"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
+
           {/* 1. Indian Shipping Address */}
           <div className="bg-card dark:bg-card/85 border border-border dark:border-purple-900/30 rounded-2xl p-6 space-y-4 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-border">

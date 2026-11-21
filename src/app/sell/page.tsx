@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function SellPage() {
-  const { setRole } = useAuth();
+  const { openAuthModal } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -113,14 +113,12 @@ export default function SellPage() {
               <p className="text-xs text-muted-foreground">
                 Thank you, {name || 'Artist'}. Our curatorial board will review your portfolio and reach out to {email || 'your email'} within 3 business days.
               </p>
-              <div className="pt-2">
+              <div className="pt-2 flex items-center justify-center gap-3">
                 <button
-                  onClick={() => {
-                    setRole('ARTIST');
-                  }}
+                  onClick={() => openAuthModal('signup', 'ARTIST')}
                   className={STYLE_CLASSES.buttons.primary + " px-6 py-2.5 text-xs"}
                 >
-                  Preview Artist Studio Portal in Demo Mode &rarr;
+                  Create Your Artist Studio Account &rarr;
                 </button>
               </div>
             </div>
@@ -214,17 +212,14 @@ export default function SellPage() {
             </form>
           )}
 
-          {/* Quick Demo Evaluation Note */}
+          {/* Sign In Switcher */}
           <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <span>Evaluating the ArtVault platform?</span>
+            <span>Already have an artist account?</span>
             <button
-              onClick={() => {
-                setRole('ARTIST');
-                window.location.href = '/artist/dashboard';
-              }}
+              onClick={() => openAuthModal('signin', 'ARTIST')}
               className="text-primary dark:text-purple-400 font-semibold hover:underline"
             >
-              Enter Demo Artist Studio &rarr;
+              Sign In to Artist Studio &rarr;
             </button>
           </div>
         </div>

@@ -78,12 +78,12 @@ export default function HomePage() {
                   Browse by Medium
                 </Link>
 
-                <button
-                  onClick={() => openAuthModal()}
+                <Link
+                  href="/sell"
                   className="px-4 py-3.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition underline underline-offset-4"
                 >
                   Apply as an Artist &rarr;
-                </button>
+                </Link>
               </div>
 
               {/* Trust Badges Bar */}

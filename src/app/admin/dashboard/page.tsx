@@ -30,14 +30,14 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { user, role, setRole } = useAuth();
+  const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'artists' | 'curation' | 'settings'>('overview');
   const [artists, setArtists] = useState(mockArtists);
   const [defaultCommission, setDefaultCommission] = useState<number>(APP_CONFIG.financial.defaultCommissionPercent);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Enforce Authorization: Never render sensitive GMV or orders if not authenticated as ADMIN
-  if (!user || role !== 'ADMIN') {
+  // 1. Case: Unauthenticated Visitor -> Require Admin Sign In
+  if (!user) {
     return (
       <div className={STYLE_CLASSES.layout.pageContainer + " py-20"}>
         <div className="max-w-xl mx-auto bg-card border border-border dark:border-purple-900/40 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl">
@@ -51,23 +51,16 @@ export default function AdminDashboardPage() {
               Curator &amp; Admin Desk
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              This internal portal manages platform settlements, RBI escrow fund releases, artist KYC approvals, and sensitive customer order records. Role-based administrator authorization is strictly enforced.
+              This internal portal manages platform settlements, RBI escrow fund releases, artist KYC approvals, and sensitive customer order records. Administrator authentication is strictly enforced.
             </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
-            Current status:{' '}
-            <span className="font-semibold text-foreground">
-              {user ? `Signed in as ${user.name} (${role})` : 'Unauthenticated Visitor'}
-            </span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
-              onClick={() => setRole('ADMIN')}
+              onClick={() => openAuthModal('signin')}
               className={STYLE_CLASSES.buttons.primary + " w-full sm:w-auto px-6 py-3 text-xs"}
             >
-              Sign in with Demo Admin Account
+              Sign In with Administrator Account
             </button>
             <Link
               href="/artworks"
@@ -75,6 +68,47 @@ export default function AdminDashboardPage() {
             >
               Back to Public Gallery
             </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Case: Logged In as Non-Admin (Collector or Artist) -> Strict 403 Forbidden Gate
+  if (role !== 'ADMIN') {
+    return (
+      <div className={STYLE_CLASSES.layout.pageContainer + " py-20"}>
+        <div className="max-w-xl mx-auto bg-card border border-destructive/20 dark:border-destructive/30 rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 text-destructive mx-auto flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-destructive">403 Access Forbidden</span>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
+              Administrator Clearance Required
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              You are currently signed in as <strong className="text-foreground">{user.name}</strong> ({role}). Your account does not have administrator permissions to access financial GMV records or order databases.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href={role === 'ARTIST' ? '/artist/dashboard' : '/collector-vault'}
+              className={STYLE_CLASSES.buttons.primary + " w-full sm:w-auto px-6 py-3 text-xs"}
+            >
+              Go to My {role === 'ARTIST' ? 'Artist Studio' : 'Collector Vault'}
+            </Link>
+            <button
+              onClick={() => {
+                logout();
+                openAuthModal('signin');
+              }}
+              className={STYLE_CLASSES.buttons.secondary + " w-full sm:w-auto px-6 py-3 text-xs"}
+            >
+              Switch Account
+            </button>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 export default function CollectorVaultPage() {
-  const { user, role, setRole, openAuthModal } = useAuth();
+  const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'vault' | 'orders' | 'addresses'>('vault');
   const [selectedCoaModal, setSelectedCoaModal] = useState<any | null>(null);
 
@@ -48,16 +48,16 @@ export default function CollectorVaultPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <button
-              onClick={() => setRole('COLLECTOR')}
+              onClick={() => openAuthModal('signin')}
               className={STYLE_CLASSES.buttons.primary + " w-full sm:w-auto px-6 py-3 text-xs"}
             >
-              Sign in with Demo Collector Account
+              Sign In to Your Account
             </button>
             <button
-              onClick={() => openAuthModal()}
+              onClick={() => openAuthModal('signup')}
               className={STYLE_CLASSES.buttons.secondary + " w-full sm:w-auto px-6 py-3 text-xs"}
             >
-              Sign In with OTP / Email
+              Create New Account
             </button>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function CollectorVaultPage() {
                 {user.name}
               </h1>
               <span className={STYLE_CLASSES.badges.printPurple}>
-                Collector Vault
+                {user.role}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -101,22 +101,14 @@ export default function CollectorVaultPage() {
           </div>
         </div>
 
-        {/* Persona quick switch */}
-        <div className="flex items-center gap-2 bg-muted/40 dark:bg-slate-900/50 p-2 rounded-2xl border border-border dark:border-purple-900/30 text-xs">
-          <span className="text-muted-foreground px-2">Role:</span>
-          {(['COLLECTOR', 'ARTIST', 'ADMIN'] as const).map(r => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-3 py-1.5 rounded-xl transition font-semibold capitalize ${
-                role === r
-                  ? 'bg-card text-primary dark:text-purple-300 shadow-xs ring-1 ring-primary/20 dark:ring-purple-500/30'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {r.toLowerCase()}
-            </button>
-          ))}
+        {/* Account controls */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={logout}
+            className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/40 transition"
+          >
+            Sign Out
+          </button>
         </div>
       </div>
 
