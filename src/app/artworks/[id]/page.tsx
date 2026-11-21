@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   mockArtworks,
   standardFramingOptions,
 } from '@/lib/mock-data';
-import { ArtworkVariant, FramingOption } from '@/types';
+import { Artwork, ArtworkVariant, FramingOption } from '@/types';
 import { formatINR } from '@/lib/utils';
+import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
 import { useCart } from '@/lib/cart-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
@@ -28,6 +29,7 @@ import {
   Layers,
   Award,
   CheckCircle2,
+  Database,
 } from 'lucide-react';
 
 export default function ArtworkDetailPage() {
@@ -36,17 +38,38 @@ export default function ArtworkDetailPage() {
   const { addItem, openCart } = useCart();
 
   const artworkId = params.id as string;
-  const artwork = mockArtworks.find(a => a.id === artworkId) || mockArtworks[0];
+  const initialArtwork = mockArtworks.find(a => a.id === artworkId || a.slug === artworkId) || mockArtworks[0];
+  const [artwork, setArtwork] = useState<Artwork>(initialArtwork);
+  const [isLiveRecord, setIsLiveRecord] = useState(false);
 
   // Selected variant & framing
   const [selectedVariant, setSelectedVariant] = useState<ArtworkVariant>(
-    artwork.variants.find(v => v.type === 'ORIGINAL') || artwork.variants[0]
+    initialArtwork.variants.find(v => v.type === 'ORIGINAL') || initialArtwork.variants[0]
   );
   const [selectedFraming, setSelectedFraming] = useState<FramingOption>(
     standardFramingOptions[0]
   );
   const [isVisualizerOpen, setIsVisualizerOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  // Fetch live artwork details from Supabase if available
+  useEffect(() => {
+    if (!artworkId) return;
+    fetch(`/api/artworks/${artworkId}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && resData.data) {
+          const mapped = mapDbArtworkToFrontend(resData.data);
+          setArtwork(mapped);
+          setIsLiveRecord(true);
+          const orig = mapped.variants.find(v => v.type === 'ORIGINAL') || mapped.variants[0];
+          setSelectedVariant(orig);
+        }
+      })
+      .catch(err => {
+        console.warn('Fallback to local mock artwork:', err);
+      });
+  }, [artworkId]);
 
   // Accordion state for below-the-fold details
   const [openAccordions, setOpenAccordions] = useState<{ [key: string]: boolean }>({
@@ -166,6 +189,11 @@ export default function ArtworkDetailPage() {
               <span>{artwork.year}</span>
               <span>&bull;</span>
               <span>{artwork.style}</span>
+              {isLiveRecord && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 ml-auto">
+                  <Database className="w-3 h-3" /> Live Supabase
+                </span>
+              )}
             </div>
             <h1 className="font-serif text-3xl font-bold text-foreground">
               {artwork.title}

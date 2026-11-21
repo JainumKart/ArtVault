@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -10,6 +10,7 @@ import {
   mockCategories,
 } from '@/lib/mock-data';
 import { formatINR, formatDate } from '@/lib/utils';
+import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
 import { Order } from '@/types';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
@@ -28,6 +29,7 @@ import {
   Layers,
   Sparkles,
   Lock,
+  Database,
 } from 'lucide-react';
 
 export default function ArtistDashboardPage() {
@@ -126,6 +128,7 @@ export default function ArtistDashboardPage() {
   const [artistArtworks, setArtistArtworks] = useState(
     mockArtworks.filter(a => a.artistId === artistId)
   );
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
 
   // New Listing Form State
   const [newTitle, setNewTitle] = useState('');
@@ -148,7 +151,36 @@ export default function ArtistDashboardPage() {
   // Scheduled pickup dispatch state
   const [orders, setOrders] = useState<Order[]>(mockOrders);
 
-  const handleCreateListing = (e: React.FormEvent) => {
+  // Fetch artist listings & orders from Supabase DB
+  useEffect(() => {
+    fetch('/api/artworks')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data)) {
+          const mapped = resData.data.map(mapDbArtworkToFrontend);
+          const filtered = mapped.filter((a: any) =>
+            a.artistId === artistId ||
+            (activeArtistProfile && a.artistName.toLowerCase().includes(activeArtistProfile.displayName.toLowerCase()))
+          );
+          if (filtered.length > 0) {
+            setArtistArtworks(filtered);
+            setIsLiveConnected(true);
+          }
+        }
+      })
+      .catch(() => {});
+
+    fetch(`/api/orders?artistId=${artistId}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          setOrders(resData.data);
+        }
+      })
+      .catch(() => {});
+  }, [artistId, activeArtistProfile]);
+
+  const handleCreateListing = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -166,7 +198,7 @@ export default function ArtistDashboardPage() {
       surface: newSurface,
       style: 'Contemporary' as any,
       year: new Date().getFullYear(),
-      description: `Newly submitted fine artwork by ${activeArtistProfile?.displayName}.`,
+      description: `Newly submitted fine artwork by ${activeArtistProfile?.displayName || 'Artist'}.`,
       images: [newImageUrl],
       isOriginalAvailable: true,
       originalPrice: parseFloat(newPrice) || 35000,
@@ -225,15 +257,56 @@ export default function ArtistDashboardPage() {
       },
     };
 
-    setArtistArtworks([newArt, ...artistArtworks]);
-    setListingSuccessMsg(`Artwork "${newTitle}" created and submitted for curator review!`);
+    // Save directly to Supabase via API
+    try {
+      const res = await fetch('/api/artworks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle,
+          artistId,
+          categoryId: newCategory,
+          medium: newMedium,
+          surface: newSurface,
+          originalPrice: parseFloat(newPrice) || 35000,
+          originalHeightCm: parseFloat(newHeight) || 60,
+          originalWidthCm: parseFloat(newWidth) || 80,
+          packagingType: newPackaging.includes('Tube') ? 'ROLLED_TUBE' : 'WOODEN_CRATE',
+          weightKg: parseFloat(newWeight) || 2.5,
+          hasLimitedPrints,
+          printPrice: parseFloat(printPrice) || 0,
+          printEditionTotal: parseInt(printTotalEdition) || 50,
+          images: [newImageUrl],
+        }),
+      });
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        const mapped = mapDbArtworkToFrontend(resData.data);
+        setArtistArtworks(prev => [mapped, ...prev]);
+      } else {
+        setArtistArtworks(prev => [newArt, ...prev]);
+      }
+    } catch {
+      setArtistArtworks(prev => [newArt, ...prev]);
+    }
+
+    setListingSuccessMsg(`Artwork "${newTitle}" registered in Supabase and submitted for curator review!`);
     setActiveTab('listings');
   };
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: Order['orderStatus']) => {
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: Order['orderStatus']) => {
     setOrders(
       orders.map(o => (o.id === orderId ? { ...o, orderStatus: newStatus } : o))
     );
+
+    // Call Supabase API PATCH
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderStatus: newStatus }),
+      });
+    } catch {}
   };
 
   return (

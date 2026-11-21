@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { mockOrders, mockArtworks } from '@/lib/mock-data';
@@ -21,12 +21,52 @@ import {
   Sparkles,
   Lock,
   ArrowRight,
+  Database,
 } from 'lucide-react';
 
 export default function CollectorVaultPage() {
   const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'vault' | 'orders' | 'addresses'>('vault');
   const [selectedCoaModal, setSelectedCoaModal] = useState<any | null>(null);
+  const [userOrders, setUserOrders] = useState<any[]>(mockOrders);
+  const [isLiveOrders, setIsLiveOrders] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Load any orders cached in localStorage
+    let combinedOrders = [...mockOrders];
+    try {
+      const stored = localStorage.getItem('artvault_local_orders');
+      if (stored) {
+        const localList = JSON.parse(stored);
+        if (Array.isArray(localList) && localList.length > 0) {
+          combinedOrders = [...localList, ...mockOrders.filter(mo => !localList.some(lo => lo.orderNumber === mo.orderNumber))];
+          setUserOrders(combinedOrders);
+          setIsLiveOrders(true);
+        }
+      }
+    } catch {}
+
+    // Fetch from database API
+    fetch(`/api/orders?userId=${user.id}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          const dbOrders = resData.data;
+          // Merge db orders with combinedOrders
+          const merged = [...dbOrders];
+          for (const co of combinedOrders) {
+            if (!merged.some(m => m.orderNumber === co.orderNumber)) {
+              merged.push(co);
+            }
+          }
+          setUserOrders(merged);
+          setIsLiveOrders(true);
+        }
+      })
+      .catch(err => console.warn('Could not fetch user orders from DB:', err));
+  }, [user]);
 
   if (!user) {
     return (
@@ -135,7 +175,10 @@ export default function CollectorVaultPage() {
           }`}
         >
           <Package className="w-4 h-4" />
-          Escrow Orders &amp; Transit ({mockOrders.length})
+          Escrow Orders &amp; Transit ({userOrders.length})
+          {isLiveOrders && (
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Live Database Synced" />
+          )}
         </button>
 
         <button
@@ -205,7 +248,7 @@ export default function CollectorVaultPage() {
       {/* Tab 2: Orders & Escrow Tracking */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
-          {mockOrders.map(order => (
+          {userOrders.map(order => (
             <div
               key={order.id}
               className="bg-card border border-border dark:border-purple-900/30 rounded-2xl p-6 shadow-xs space-y-4"
@@ -225,7 +268,7 @@ export default function CollectorVaultPage() {
               </div>
 
               <div className="space-y-3">
-                {order.items.map(item => (
+                {order.items?.map((item: any) => (
                   <div key={item.id} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
                       <img

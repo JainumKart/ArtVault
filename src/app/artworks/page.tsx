@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   mockArtworks,
@@ -9,6 +9,7 @@ import {
 } from '@/lib/mock-data';
 import { Artwork, ArtworkMedium, ArtworkStyle } from '@/types';
 import { formatINR } from '@/lib/utils';
+import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
 import { useCart } from '@/lib/cart-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
 import { STYLE_CLASSES } from '@/constants';
@@ -20,11 +21,42 @@ import {
   ShoppingBag,
   Sparkles,
   ChevronDown,
+  Database,
 } from 'lucide-react';
 
 export default function ArtworksPage() {
   const { addItem, openCart } = useCart();
   const [visualizerArtwork, setVisualizerArtwork] = useState<Artwork | null>(null);
+
+  // Live state with mock fallback
+  const [artworks, setArtworks] = useState<Artwork[]>(mockArtworks);
+  const [categories, setCategories] = useState(mockCategories);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+
+  // Fetch live catalog from Supabase
+  useEffect(() => {
+    fetch('/api/artworks')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          const mapped = resData.data.map(mapDbArtworkToFrontend);
+          setArtworks(mapped);
+          setIsLiveConnected(true);
+        }
+      })
+      .catch(err => {
+        console.warn('Using local fallback catalog:', err);
+      });
+
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          setCategories(resData.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +88,7 @@ export default function ArtworksPage() {
   ];
 
   const filteredArtworks = useMemo(() => {
-    return mockArtworks.filter(artwork => {
+    return artworks.filter(artwork => {
       // Category filter
       if (selectedCategory !== 'ALL' && artwork.categoryId !== selectedCategory) {
         return false;
@@ -122,7 +154,14 @@ export default function ArtworksPage() {
     <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
       {/* Page Header */}
       <div className={STYLE_CLASSES.layout.pageHeader}>
-        <span className={STYLE_CLASSES.typography.eyebrow}>Catalog Archive</span>
+        <div className="flex items-center gap-2">
+          <span className={STYLE_CLASSES.typography.eyebrow}>Catalog Archive</span>
+          {isLiveConnected && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+              <Database className="w-3 h-3" /> Live Supabase PostgreSQL
+            </span>
+          )}
+        </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mt-1">
           Explore Fine Artworks &amp; Original Masterpieces
         </h1>
@@ -145,11 +184,11 @@ export default function ArtworksPage() {
               : 'bg-card border border-border text-muted-foreground hover:text-foreground'
           }`}
         >
-          All Pieces ({mockArtworks.length})
+          All Pieces ({artworks.length})
         </button>
 
-        {mockCategories.map(cat => {
-          const count = mockArtworks.filter(a => a.categoryId === cat.id).length;
+        {categories.map(cat => {
+          const count = artworks.filter(a => a.categoryId === cat.id).length;
           const isSelected = selectedCategory === cat.id;
           return (
             <button
@@ -364,7 +403,7 @@ export default function ArtworksPage() {
         {/* Artworks Grid */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Showing {filteredArtworks.length} of {mockArtworks.length} artworks</span>
+            <span>Showing {filteredArtworks.length} of {artworks.length} artworks</span>
             {(selectedMedium !== 'ALL' || selectedStyle !== 'ALL' || selectedType !== 'ALL' || priceRange !== 'ALL' || searchQuery) && (
               <button
                 onClick={clearAllFilters}

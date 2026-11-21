@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
@@ -15,14 +15,50 @@ import {
   Box,
   QrCode,
   Calendar,
+  Database,
 } from 'lucide-react';
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId') || 'AV-894210';
-  const dummyArtworkTitle = 'Ephemeral Monsoon over Banaras';
-  const dummyArtistName = 'Aarav Mukherjee';
-  const qrHash = `COA-ART-${orderId}-X99`;
+
+  const [orderData, setOrderData] = useState<any | null>(null);
+
+  useEffect(() => {
+    // 1. Check local storage cache first for instant render
+    try {
+      const stored = localStorage.getItem('artvault_local_orders');
+      if (stored) {
+        const list = JSON.parse(stored);
+        const matched = list.find((o: any) => o.orderNumber === orderId || o.id === orderId);
+        if (matched) {
+          setOrderData(matched);
+        }
+      }
+    } catch {}
+
+    // 2. Fetch from database API
+    if (orderId) {
+      fetch(`/api/orders/${orderId}`)
+        .then(res => res.json())
+        .then(resData => {
+          if (resData.success && resData.data) {
+            setOrderData(resData.data);
+          }
+        })
+        .catch(err => console.warn('Could not fetch order from DB:', err));
+    }
+  }, [orderId]);
+
+  const firstItem = orderData?.items?.[0];
+  const artworkTitle = firstItem?.artworkTitle || 'Ephemeral Monsoon over Banaras';
+  const artistName = firstItem?.artistName || 'Aarav Mukherjee';
+  const variantClassification = firstItem?.variantType === 'LIMITED_PRINT' 
+    ? 'Museum Archival Giclée Print on Cotton Rag' 
+    : 'Unique 1-of-1 Original Masterpiece';
+  const courier = orderData?.scheduledPickup?.courierPartner || 'Delhivery Art Logistics';
+  const awb = orderData?.scheduledPickup?.awbNumber || 'DEL-ART-9928194';
+  const qrHash = firstItem?.variant?.artwork?.coa?.tokenNumber || `COA-ART-${orderId}-X99`;
 
   const handlePrint = () => {
     window.print();
@@ -35,9 +71,16 @@ function OrderSuccessContent() {
         <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
-          Settlement Confirmed &bull; RBI Escrow Active
-        </span>
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
+            Settlement Confirmed &bull; RBI Escrow Active
+          </span>
+          {orderData && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+              <Database className="w-3 h-3" /> Live Supabase Synced
+            </span>
+          )}
+        </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">
           Acquisition Successful!
         </h1>
@@ -55,7 +98,7 @@ function OrderSuccessContent() {
               White-Glove Fulfillment &amp; Scheduled Courier Pickup
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Carrier: Delhivery Fine Art Express &bull; Airway Bill (AWB): DEL-ART-9928194
+              Carrier: {courier} &bull; Airway Bill (AWB): {awb}
             </p>
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
@@ -78,7 +121,7 @@ function OrderSuccessContent() {
               <Box className="w-4 h-4 animate-bounce" /> 2. Archival Packing
             </div>
             <p className="text-xs font-semibold text-foreground">Studio Packaging</p>
-            <p className="text-[11px] text-muted-foreground">Artist wrapping in PVC tube</p>
+            <p className="text-[11px] text-muted-foreground">Artist wrapping in fine art crate</p>
           </div>
 
           <div className="p-4 rounded-xl bg-muted/20 border border-border/60 space-y-1.5 opacity-80">
@@ -126,22 +169,22 @@ function OrderSuccessContent() {
           <div className="space-y-3">
             <div>
               <span className="text-muted-foreground block text-[11px]">Artwork Title:</span>
-              <p className="font-serif font-bold text-base text-foreground">{dummyArtworkTitle}</p>
+              <p className="font-serif font-bold text-base text-foreground">{artworkTitle}</p>
             </div>
             <div>
               <span className="text-muted-foreground block text-[11px]">Artist:</span>
-              <p className="font-semibold text-foreground">{dummyArtistName} (Bengaluru, Karnataka)</p>
+              <p className="font-semibold text-foreground">{artistName}</p>
             </div>
             <div>
               <span className="text-muted-foreground block text-[11px]">Medium &amp; Surface:</span>
-              <p className="font-semibold text-foreground">Oil on Belgian Linen Canvas</p>
+              <p className="font-semibold text-foreground">Archival Fine Art Edition</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div>
               <span className="text-muted-foreground block text-[11px]">Edition Classification:</span>
-              <p className="font-bold text-amber-700 dark:text-amber-300">Unique 1-of-1 Original Masterpiece</p>
+              <p className="font-bold text-amber-700 dark:text-amber-300">{variantClassification}</p>
             </div>
             <div>
               <span className="text-muted-foreground block text-[11px]">Cryptographic QR Token:</span>
@@ -165,7 +208,7 @@ function OrderSuccessContent() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <p className="text-xs text-muted-foreground">
-              A stamped physical copy with artist&apos;s seal is packaged in your tube.
+              A stamped physical copy with artist&apos;s seal is packaged with your artwork.
             </p>
           </div>
 
@@ -177,7 +220,7 @@ function OrderSuccessContent() {
               <Printer className="w-3.5 h-3.5" /> Print Certificate
             </button>
             <button
-              onClick={() => alert('Certificate PDF successfully downloaded!')}
+              onClick={() => alert('Certificate PDF successfully generated!')}
               className={STYLE_CLASSES.buttons.primary}
             >
               <Download className="w-3.5 h-3.5" /> Download PDF

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -27,14 +27,49 @@ import {
   AlertTriangle,
   Sliders,
   Lock,
+  Database,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'artists' | 'curation' | 'settings'>('overview');
   const [artists, setArtists] = useState(mockArtists);
+  const [orders, setOrders] = useState<any[]>(mockOrders);
   const [defaultCommission, setDefaultCommission] = useState<number>(APP_CONFIG.financial.defaultCommissionPercent);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+
+  // Fetch live orders and artists from Supabase DB
+  useEffect(() => {
+    if (role !== 'ADMIN') return;
+
+    fetch('/api/artists')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          setArtists(resData.data);
+          setIsLiveConnected(true);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/orders')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          // Merge with mock orders
+          const merged = [...resData.data];
+          for (const mo of mockOrders) {
+            if (!merged.some(m => m.orderNumber === mo.orderNumber)) {
+              merged.push(mo);
+            }
+          }
+          setOrders(merged);
+          setIsLiveConnected(true);
+        }
+      })
+      .catch(() => {});
+  }, [role]);
 
   // 1. Case: Unauthenticated Visitor -> Require Admin Sign In
   if (!user) {
@@ -116,7 +151,7 @@ export default function AdminDashboardPage() {
   }
 
   // Calculations
-  const gmv = mockOrders.reduce((acc, o) => acc + o.total, 0) + 450000;
+  const gmv = orders.reduce((acc, o) => acc + o.total, 0) + 450000;
   const platformRevenue = gmv * (defaultCommission / 100);
   const pendingEscrow = 142000;
 
@@ -152,6 +187,11 @@ export default function AdminDashboardPage() {
               <span className={STYLE_CLASSES.badges.printPurple}>
                 Super Admin
               </span>
+              {isLiveConnected && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+                  <Database className="w-3 h-3" /> Live Supabase Synced
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Platform Transaction Monitor &bull; Escrow Settlements &bull; Artist KYC Screening &bull; TDS Compliance
@@ -218,7 +258,7 @@ export default function AdminDashboardPage() {
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Marketplace Transactions ({mockOrders.length})
+          Marketplace Transactions ({orders.length})
         </button>
 
         <button
@@ -282,8 +322,11 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {mockOrders.map(order => {
+              {orders.map(order => {
                 const comm = order.total * (defaultCommission / 100);
+                const city = typeof order.shippingAddress === 'object' && order.shippingAddress?.city ? order.shippingAddress.city : 'Mumbai';
+                const firstArtTitle = order.items?.[0]?.artworkTitle || 'Original Artwork';
+                const statusStr = String(order.orderStatus || 'CONFIRMED').replace(/_/g, ' ');
                 return (
                   <tr key={order.id} className={STYLE_CLASSES.tables.row}>
                     <td className={STYLE_CLASSES.tables.td + " font-mono font-bold text-foreground"}>
@@ -291,10 +334,10 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className={STYLE_CLASSES.tables.td}>
                       <p className="font-semibold text-foreground">{order.customerName}</p>
-                      <p className="text-muted-foreground text-[11px]">{order.shippingAddress.city}</p>
+                      <p className="text-muted-foreground text-[11px]">{city}</p>
                     </td>
                     <td className={STYLE_CLASSES.tables.td + " text-foreground font-serif"}>
-                      {order.items[0]?.artworkTitle}
+                      {firstArtTitle}
                     </td>
                     <td className={STYLE_CLASSES.tables.td + " font-serif font-bold text-foreground"}>
                       {formatINR(order.total)}
@@ -304,7 +347,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className={STYLE_CLASSES.tables.td}>
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                        {order.orderStatus.replace(/_/g, ' ')}
+                        {statusStr}
                       </span>
                     </td>
                     <td className={STYLE_CLASSES.tables.td}>

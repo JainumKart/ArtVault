@@ -92,16 +92,85 @@ export default function CheckoutPage() {
 
     // Simulate Razorpay Indian Gateway Workflow
     setPaymentStep('Connecting to Razorpay Route Gateway...');
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
 
     setPaymentStep('Authenticating via RBI 3D Secure / UPI Intent...');
-    await new Promise(r => setTimeout(r, 900));
+    await new Promise(r => setTimeout(r, 700));
 
     setPaymentStep('Creating Escrow Hold & Scheduling Studio Courier Pickup...');
-    await new Promise(r => setTimeout(r, 900));
+
+    let generatedOrderNumber = `AV-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          customerName: fullName || user?.name || 'ArtVault Collector',
+          customerEmail: user?.email || 'collector@artvault.in',
+          customerPhone: phone || user?.phone || '+91 98200 12345',
+          shippingAddress: {
+            fullName,
+            phone,
+            streetAddress,
+            apartment,
+            city,
+            state: stateName,
+            postalCode,
+            country: 'India',
+            isDefault: true,
+          },
+          items: items.map(item => ({
+            variantId: item.variantId,
+            artworkTitle: item.artworkTitle,
+            artworkImage: item.artworkImage,
+            artistId: item.artistId,
+            artistName: item.artistName,
+            variantTitle: item.variantTitle,
+            variantType: item.variantType,
+            editionNumber: item.editionNumber,
+            framingName: item.selectedFraming?.name,
+            unitPrice: item.unitPrice,
+            framingPrice: item.framingPrice,
+            quantity: item.quantity,
+            totalPrice: item.totalItemPrice,
+          })),
+          subtotal,
+          taxGst,
+          shippingFee,
+          total,
+          paymentMethod: paymentMethod.toUpperCase(),
+          paymentDetails: {
+            gatewayTransactionId: `pay_${Date.now().toString(36)}`,
+            paymentTime: new Date().toISOString(),
+            paymentMode: paymentMethod.toUpperCase(),
+            upiVpa: paymentMethod === 'upi' ? upiVpa : undefined,
+            cardLast4: paymentMethod === 'card' ? cardNumber.slice(-4) : undefined,
+            bank: paymentMethod === 'netbanking' ? selectedBank : undefined,
+          },
+        }),
+      });
+
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        generatedOrderNumber = resData.data.orderNumber;
+
+        // Cache locally for instant fast-render in Collector Vault
+        try {
+          const stored = localStorage.getItem('artvault_local_orders');
+          const list = stored ? JSON.parse(stored) : [];
+          list.unshift(resData.data);
+          localStorage.setItem('artvault_local_orders', JSON.stringify(list));
+        } catch (storageErr) {
+          console.warn('Local storage write warning:', storageErr);
+        }
+      }
+    } catch (apiErr) {
+      console.warn('API order post error, proceeding with simulated confirmation:', apiErr);
+    }
 
     // Clear cart and redirect
-    const generatedOrderNumber = `AV-${Date.now().toString().slice(-6)}`;
     clearCart();
     router.push(`/order-success?orderId=${generatedOrderNumber}`);
   };
