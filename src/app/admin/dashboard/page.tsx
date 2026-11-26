@@ -4,10 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
-  mockOrders,
   mockArtists,
   mockArtworks,
-  mockPayouts,
 } from '@/lib/mock-data';
 import { formatINR, formatDate } from '@/lib/utils';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
@@ -34,7 +32,7 @@ export default function AdminDashboardPage() {
   const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'artists' | 'curation' | 'settings'>('overview');
   const [artists, setArtists] = useState(mockArtists);
-  const [orders, setOrders] = useState<any[]>(mockOrders);
+  const [orders, setOrders] = useState<any[]>([]);
   const [defaultCommission, setDefaultCommission] = useState<number>(APP_CONFIG.financial.defaultCommissionPercent);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLiveConnected, setIsLiveConnected] = useState(false);
@@ -46,29 +44,22 @@ export default function AdminDashboardPage() {
     fetch('/api/artists')
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        if (resData.success && Array.isArray(resData.data)) {
           setArtists(resData.data);
           setIsLiveConnected(true);
         }
       })
-      .catch(() => {});
+      .catch(error => console.error('Could not fetch artists for the admin dashboard:', error));
 
     fetch('/api/orders')
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
-          // Merge with mock orders
-          const merged = [...resData.data];
-          for (const mo of mockOrders) {
-            if (!merged.some(m => m.orderNumber === mo.orderNumber)) {
-              merged.push(mo);
-            }
-          }
-          setOrders(merged);
+        if (resData.success && Array.isArray(resData.data)) {
+          setOrders(resData.data);
           setIsLiveConnected(true);
         }
       })
-      .catch(() => {});
+      .catch(error => console.error('Could not fetch orders for the admin dashboard:', error));
   }, [role]);
 
   // 1. Case: Unauthenticated Visitor -> Require Admin Sign In
@@ -151,9 +142,11 @@ export default function AdminDashboardPage() {
   }
 
   // Calculations
-  const gmv = orders.reduce((acc, o) => acc + o.total, 0) + 450000;
+  const gmv = orders.reduce((acc, order) => acc + (Number(order.total) || 0), 0);
   const platformRevenue = gmv * (defaultCommission / 100);
-  const pendingEscrow = 142000;
+  const pendingEscrow = orders
+    .filter(order => order.paymentStatus === 'PAID' && !['DELIVERED', 'CANCELLED', 'RETURNED'].includes(order.orderStatus))
+    .reduce((acc, order) => acc + (Number(order.total) || 0), 0);
 
   const handleApproveArtist = (artistId: string) => {
     setArtists(

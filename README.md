@@ -58,7 +58,23 @@ Copy `.env.example` to `.env`:
 cp .env.example .env
 ```
 
-### 3. Run Development Server
+### 3. Initialize the Database
+```bash
+npm run prisma:push
+npm run prisma:seed
+```
+
+The seed creates the ArtVault admin, Pragya Jain (artist), and Kartik Jain (collector) accounts. It deletes unreferenced legacy demo listings and archives any linked to orders, reviews, or payouts so transaction history is preserved.
+
+The local demo sign-in accounts are:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@artvault.in` | `AdminPassword123!` |
+| Artist | `pragya@artvault.in` | `PragyaPassword123!` |
+| Collector | `kartik@artvault.in` | `KartikPassword123!` |
+
+### 4. Run Development Server
 ```bash
 npm run dev
 ```

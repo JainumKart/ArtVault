@@ -53,8 +53,8 @@ export function AuthModal() {
   const [signUpCity, setSignUpCity] = useState('');
 
   // OTP State
-  const [otpPhone, setOtpPhone] = useState('9820154321');
-  const [otpEmail, setOtpEmail] = useState('collector@artvault.in');
+  const [otpPhone, setOtpPhone] = useState('9000000003');
+  const [otpEmail, setOtpEmail] = useState('kartik@artvault.in');
   const [otpCode, setOtpCode] = useState('');
   const [otpStep, setOtpStep] = useState<'input' | 'verify'>('input');
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
@@ -432,7 +432,7 @@ export function AuthModal() {
                           required
                           value={otpEmail}
                           onChange={e => setOtpEmail(e.target.value)}
-                          placeholder="collector@artvault.in"
+                          placeholder="kartik@artvault.in"
                           className="w-full px-3 py-2 text-xs bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-hidden"
                         />
                       </div>

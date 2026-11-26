@@ -28,7 +28,7 @@ export default function ArtworksPage() {
   const { addItem, openCart } = useCart();
   const [visualizerArtwork, setVisualizerArtwork] = useState<Artwork | null>(null);
 
-  // Live state with mock fallback
+  // The catalog starts empty and is populated from the database.
   const [artworks, setArtworks] = useState<Artwork[]>(mockArtworks);
   const [categories, setCategories] = useState(mockCategories);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
@@ -38,20 +38,20 @@ export default function ArtworksPage() {
     fetch('/api/artworks')
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        if (resData.success && Array.isArray(resData.data)) {
           const mapped = resData.data.map(mapDbArtworkToFrontend);
           setArtworks(mapped);
           setIsLiveConnected(true);
         }
       })
       .catch(err => {
-        console.warn('Using local fallback catalog:', err);
+        console.warn('Could not fetch the artwork catalog:', err);
       });
 
     fetch('/api/categories')
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        if (resData.success && Array.isArray(resData.data)) {
           setCategories(resData.data);
         }
       })

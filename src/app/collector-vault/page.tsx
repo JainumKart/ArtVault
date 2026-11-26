@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { mockOrders, mockArtworks } from '@/lib/mock-data';
+import { Artwork } from '@/types';
 import { formatINR, formatDate } from '@/lib/utils';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
@@ -28,20 +28,20 @@ export default function CollectorVaultPage() {
   const { user, role, openAuthModal, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'vault' | 'orders' | 'addresses'>('vault');
   const [selectedCoaModal, setSelectedCoaModal] = useState<any | null>(null);
-  const [userOrders, setUserOrders] = useState<any[]>(mockOrders);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
   const [isLiveOrders, setIsLiveOrders] = useState(false);
 
   useEffect(() => {
     if (!user) return;
 
     // Load any orders cached in localStorage
-    let combinedOrders = [...mockOrders];
+    let combinedOrders: any[] = [];
     try {
       const stored = localStorage.getItem('artvault_local_orders');
       if (stored) {
         const localList = JSON.parse(stored);
         if (Array.isArray(localList) && localList.length > 0) {
-          combinedOrders = [...localList, ...mockOrders.filter(mo => !localList.some(lo => lo.orderNumber === mo.orderNumber))];
+          combinedOrders = localList;
           setUserOrders(combinedOrders);
           setIsLiveOrders(true);
         }
@@ -105,8 +105,7 @@ export default function CollectorVaultPage() {
     );
   }
 
-  // Acquired artworks mock for this collector
-  const acquiredArtworks = mockArtworks.slice(0, 2);
+  const acquiredArtworks: Artwork[] = [];
 
   return (
     <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-8"}>
@@ -190,7 +189,7 @@ export default function CollectorVaultPage() {
           }`}
         >
           <MapPin className="w-4 h-4" />
-          Saved Delivery Addresses ({user.savedAddresses?.length || 1})
+          Saved Delivery Addresses ({user.savedAddresses?.length || 0})
         </button>
       </div>
 
@@ -198,7 +197,11 @@ export default function CollectorVaultPage() {
       {activeTab === 'vault' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {acquiredArtworks.map(artwork => (
+            {acquiredArtworks.length === 0 ? (
+              <p className="md:col-span-2 rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                Your collector vault is empty. Acquired artworks and their certificates will appear here.
+              </p>
+            ) : acquiredArtworks.map(artwork => (
               <div
                 key={artwork.id}
                 className="bg-card border border-border dark:border-purple-900/30 rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-4"
@@ -248,7 +251,11 @@ export default function CollectorVaultPage() {
       {/* Tab 2: Orders & Escrow Tracking */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
-          {userOrders.map(order => (
+          {userOrders.length === 0 ? (
+            <p className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+              You do not have any orders yet.
+            </p>
+          ) : userOrders.map(order => (
             <div
               key={order.id}
               className="bg-card border border-border dark:border-purple-900/30 rounded-2xl p-6 shadow-xs space-y-4"
@@ -306,21 +313,27 @@ export default function CollectorVaultPage() {
         <div className="max-w-xl bg-card border border-border dark:border-purple-900/30 rounded-2xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-serif font-bold text-base text-foreground">Primary Delivery Address</h3>
-            <span className="text-xs bg-primary/10 text-primary dark:text-purple-400 px-2.5 py-0.5 rounded-full font-semibold">
-              Default
-            </span>
+            {user.savedAddresses?.[0] && (
+              <span className="text-xs bg-primary/10 text-primary dark:text-purple-400 px-2.5 py-0.5 rounded-full font-semibold">
+                Default
+              </span>
+            )}
           </div>
 
-          <div className="text-xs space-y-1 text-muted-foreground">
-            <p className="font-bold text-foreground">{user.savedAddresses?.[0]?.fullName || user.name}</p>
-            <p>{user.savedAddresses?.[0]?.streetAddress || 'Flat 902, Lodha Bellissimo'}</p>
-            <p>{user.savedAddresses?.[0]?.apartment || 'Tower B, 9th Floor'}</p>
-            <p>
-              {user.savedAddresses?.[0]?.city || 'Mumbai'}, {user.savedAddresses?.[0]?.state || 'Maharashtra'} -{' '}
-              {user.savedAddresses?.[0]?.postalCode || '400011'}
-            </p>
-            <p>Phone: {user.phone}</p>
-          </div>
+          {user.savedAddresses?.[0] ? (
+            <div className="text-xs space-y-1 text-muted-foreground">
+              <p className="font-bold text-foreground">{user.savedAddresses[0].fullName}</p>
+              <p>{user.savedAddresses[0].streetAddress}</p>
+              {user.savedAddresses[0].apartment && <p>{user.savedAddresses[0].apartment}</p>}
+              <p>
+                {user.savedAddresses[0].city}, {user.savedAddresses[0].state} -{' '}
+                {user.savedAddresses[0].postalCode}
+              </p>
+              <p>Phone: {user.savedAddresses[0].phone}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No delivery addresses saved yet.</p>
+          )}
         </div>
       )}
 

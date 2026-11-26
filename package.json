@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^6.0.1",
@@ -24,12 +27,20 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^22.10.1",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^31.0.1",
     "postcss": "^8.4.49",
     "prisma": "^6.0.1",
     "tailwindcss": "^3.4.16",
-    "typescript": "^5.7.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^5.1.1"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

@@ -1,12 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { mockArtists, mockArtworks } from '@/lib/mock-data';
+import { ArtistProfile } from '@/types';
 import { STYLE_CLASSES } from '@/constants';
 import { CheckCircle2, Star, MapPin, Award, ArrowRight } from 'lucide-react';
 
 export default function ArtistsPage() {
+  const [artists, setArtists] = useState<ArtistProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/artists?hasAvailableArtworks=true')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data)) {
+          setArtists(resData.data);
+        }
+      })
+      .catch(error => console.error('Could not fetch artist profiles:', error))
+      .finally(() => setIsLoading(false));
+  }, []);
+
   return (
     <div className={STYLE_CLASSES.layout.pageContainer + " py-10 space-y-12"}>
       {/* Header */}
@@ -23,9 +38,23 @@ export default function ArtistsPage() {
 
       {/* Artists Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {mockArtists.map(artist => {
-          const artistArtworks = mockArtworks.filter(a => a.artistId === artist.id);
-
+        {artists.length === 0 ? (
+          <div className="md:col-span-3 rounded-2xl border border-border bg-card p-10 text-center space-y-3">
+            <p className="font-serif text-lg font-bold text-foreground">
+              {isLoading ? 'Loading artists...' : 'No artist profiles yet'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isLoading
+                ? 'Artist profiles will appear here when available.'
+                : 'New creators will appear here after their studio profiles are set up.'}
+            </p>
+            {!isLoading && (
+              <Link href="/sell" className="inline-flex text-sm font-semibold text-primary hover:underline">
+                Apply to join ArtVault
+              </Link>
+            )}
+          </div>
+        ) : artists.map(artist => {
           return (
             <div
               key={artist.id}
@@ -91,7 +120,7 @@ export default function ArtistsPage() {
                 <div>
                   <div className="pt-3 border-t border-border flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {artistArtworks.length} artworks listed
+                      {artist.artworkCount} artworks listed
                     </span>
                     <Link
                       href={`/artists/${artist.id}`}

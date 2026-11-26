@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { APP_CONFIG } from '@/constants';
+import { standardFramingOptions } from '@/lib/mock-data';
 import prisma from '@/lib/prisma';
+
+class OrderRequestError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+  }
+}
 
 // GET /api/orders - Fetch orders with role / user filter
 export async function GET(req: NextRequest) {
@@ -70,177 +78,204 @@ export async function POST(req: NextRequest) {
       paymentDetails,
     } = body;
 
-    if (!customerEmail || !customerName || !items || items.length === 0) {
+    if (
+      typeof customerEmail !== 'string' ||
+      !customerEmail.trim() ||
+      typeof customerName !== 'string' ||
+      !customerName.trim() ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
       return NextResponse.json(
         { success: false, error: 'Customer details and order items are required.' },
         { status: 400 }
       );
     }
 
-    // 1. Resolve or create user account
-    let targetUserId = userId;
-    let dbUser = null;
+    const newOrder = await prisma.$transaction(async tx => {
+      const preparedItems = [];
+      const preparedPayouts = [];
+      let calculatedSubtotal = 0;
+      const escrowReleaseDate = new Date();
+      escrowReleaseDate.setDate(
+        escrowReleaseDate.getDate() + APP_CONFIG.financial.escrowHoldingDays
+      );
 
-    if (targetUserId) {
-      dbUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-    }
+      for (const item of items) {
+        const quantity = item.quantity;
+        if (
+          typeof item.variantId !== 'string' ||
+          !item.variantId ||
+          !Number.isSafeInteger(quantity) ||
+          quantity < 1
+        ) {
+          throw new OrderRequestError('Each item needs a valid variant and quantity.', 400);
+        }
 
-    if (!dbUser) {
-      dbUser = await prisma.user.findFirst({
-        where: { email: customerEmail.toLowerCase().trim() },
-      });
-    }
-
-    if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          name: customerName,
-          email: customerEmail.toLowerCase().trim(),
-          phone: customerPhone || '+91 98200 12345',
-          role: 'COLLECTOR',
-          isEmailVerified: true,
-          isPhoneVerified: true,
-        },
-      });
-    }
-    targetUserId = dbUser.id;
-
-    // 2. Generate Unique Order Number
-    const orderNumber = `AV-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    // 3. Fallback variant and artist lookup to ensure foreign keys
-    const fallbackVariant = await prisma.artworkVariant.findFirst({
-      include: { artwork: { include: { artist: true } } },
-    });
-    const fallbackArtist = await prisma.artistProfile.findFirst();
-
-    // 4. Prepare Order Items & Payouts
-    const preparedItems = [];
-    const preparedPayouts = [];
-
-    // Calculate escrow release date (7 days post-delivery)
-    const escrowReleaseDate = new Date();
-    escrowReleaseDate.setDate(escrowReleaseDate.getDate() + 7);
-
-    for (const item of items) {
-      // Check if variant exists
-      let validVariantId = item.variantId;
-      let variantExists = null;
-      if (validVariantId) {
-        variantExists = await prisma.artworkVariant.findUnique({
-          where: { id: validVariantId },
+        const variant = await tx.artworkVariant.findUnique({
+          where: { id: item.variantId },
+          include: { artwork: { include: { artist: true } } },
         });
-      }
+        if (!variant) {
+          throw new OrderRequestError('An artwork variant in this order no longer exists.', 400);
+        }
+        if (variant.artwork.status !== 'AVAILABLE') {
+          throw new OrderRequestError('An artwork in this order is not available.', 409);
+        }
+        if (variant.type === 'ORIGINAL' && quantity !== 1) {
+          throw new OrderRequestError('An original artwork can only be purchased once.', 409);
+        }
+        if (
+          !variant.inStock ||
+          (variant.type === 'LIMITED_PRINT' &&
+            (variant.editionAvailable === null || variant.editionAvailable < quantity))
+        ) {
+          throw new OrderRequestError('The requested quantity is no longer available.', 409);
+        }
 
-      if (!variantExists) {
-        validVariantId = fallbackVariant?.id;
-      }
-
-      if (!validVariantId) {
-        return NextResponse.json(
-          { success: false, error: 'No catalog artwork variant available in database.' },
-          { status: 400 }
+        const framing = standardFramingOptions.find(
+          option => option.id === item.framingId || option.name === item.framingName
         );
-      }
+        if ((item.framingId || item.framingName) && !framing) {
+          throw new OrderRequestError('The selected framing option is invalid.', 400);
+        }
+        const framingPrice = framing?.priceDelta ?? 0;
+        const itemTotal = (variant.price + framingPrice) * quantity;
 
-      // Check artist foreign key
-      let validArtistId = item.artistId;
-      let artistExists = null;
-      if (validArtistId) {
-        artistExists = await prisma.artistProfile.findUnique({
-          where: { id: validArtistId },
+        const inventoryUpdate = await tx.artworkVariant.updateMany({
+          where:
+            variant.type === 'LIMITED_PRINT'
+              ? {
+                  id: variant.id,
+                  inStock: true,
+                  editionAvailable: { gte: quantity },
+                }
+              : { id: variant.id, inStock: true },
+          data:
+            variant.type === 'LIMITED_PRINT'
+              ? {
+                  editionAvailable: { decrement: quantity },
+                  ...(variant.editionAvailable === quantity ? { inStock: false } : {}),
+                }
+              : { inStock: false },
         });
-      }
-      if (!artistExists) {
-        validArtistId = fallbackArtist?.id || fallbackVariant?.artwork.artistId;
-      }
+        if (inventoryUpdate.count !== 1) {
+          throw new OrderRequestError('The requested quantity is no longer available.', 409);
+        }
 
-      const itemTotal = Number(item.totalPrice || item.totalItemPrice || item.unitPrice * (item.quantity || 1));
-      const platformFee = Math.round(itemTotal * 0.20); // 20%
-      const tdsAmount = Math.round(itemTotal * 0.01); // 1% Indian IT Act 194-O
-      const netPayout = itemTotal - platformFee - tdsAmount;
+        const platformFee = Math.round(
+          (itemTotal * APP_CONFIG.financial.defaultCommissionPercent) / 100
+        );
+        const tdsAmount = Math.round(
+          (itemTotal * APP_CONFIG.financial.tdsSection194OPercent) / 100
+        );
+        calculatedSubtotal += itemTotal;
 
-      preparedItems.push({
-        variantId: validVariantId,
-        artworkTitle: item.artworkTitle || 'Fine Artwork',
-        artworkImage: item.artworkImage || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-        artistId: validArtistId || 'default-artist',
-        artistName: item.artistName || 'Artist',
-        variantTitle: item.variantTitle || 'Original Artwork',
-        variantType: (item.variantType as any) || 'ORIGINAL',
-        editionNumber: item.editionNumber || null,
-        framingName: item.selectedFraming?.name || item.framingName || null,
-        unitPrice: Number(item.unitPrice || itemTotal),
-        framingPrice: Number(item.framingPrice || 0),
-        quantity: Number(item.quantity || 1),
-        totalPrice: itemTotal,
-      });
-
-      if (validArtistId) {
+        preparedItems.push({
+          variantId: variant.id,
+          artworkTitle: variant.artwork.title,
+          artworkImage: variant.artwork.images[0] || '',
+          artistId: variant.artwork.artistId,
+          artistName: variant.artwork.artist.displayName,
+          variantTitle: variant.title,
+          variantType: variant.type,
+          editionNumber: item.editionNumber || null,
+          framingName: framing?.name || null,
+          unitPrice: variant.price,
+          framingPrice,
+          quantity,
+          totalPrice: itemTotal,
+        });
         preparedPayouts.push({
-          artistId: validArtistId,
-          artworkTitle: item.artworkTitle || 'Fine Artwork',
+          artistId: variant.artwork.artistId,
+          artworkTitle: variant.artwork.title,
           grossSaleAmount: itemTotal,
-          platformCommissionPercent: 20,
+          platformCommissionPercent: APP_CONFIG.financial.defaultCommissionPercent,
           platformCommissionAmount: platformFee,
-          tdsPercent: 1,
-          tdsAmount: tdsAmount,
-          netPayoutAmount: netPayout,
+          tdsPercent: APP_CONFIG.financial.tdsSection194OPercent,
+          tdsAmount,
+          netPayoutAmount: itemTotal - platformFee - tdsAmount,
           status: 'HELD_IN_ESCROW' as const,
           escrowReleaseDate,
         });
       }
-    }
 
-    const scheduledPickup = {
-      courierPartner: 'Delhivery Art Logistics',
-      awbNumber: `DEL-ART-${Math.floor(1000000 + Math.random() * 9000000)}`,
-      pickupDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      timeSlot: '2:00 PM - 5:00 PM',
-      status: 'SCHEDULED',
-      pickupAddress: 'Artist Studio, Whitefield Art District, Bengaluru',
-      contactPerson: 'Studio Logistics Manager',
-      contactPhone: '+91 98450 11223',
-    };
+      const normalizedEmail = customerEmail.toLowerCase().trim();
+      let dbUser = userId
+        ? await tx.user.findUnique({ where: { id: userId } })
+        : null;
+      if (!dbUser) {
+        dbUser = await tx.user.findFirst({ where: { email: normalizedEmail } });
+      }
+      if (!dbUser) {
+        dbUser = await tx.user.create({
+          data: {
+            name: customerName.trim(),
+            email: normalizedEmail,
+            phone: customerPhone || '+91 98200 12345',
+            role: 'COLLECTOR',
+            isEmailVerified: true,
+            isPhoneVerified: true,
+          },
+        });
+      }
 
-    // 5. Create Order in Database
-    const newOrder = await prisma.order.create({
-      data: {
-        orderNumber,
-        userId: targetUserId,
-        customerName,
-        customerEmail: customerEmail.toLowerCase().trim(),
-        customerPhone: customerPhone || '+91 98200 12345',
-        shippingAddress: shippingAddress || {},
-        subtotal: Number(subtotal || 0),
-        taxGst: Number(taxGst || 0),
-        shippingFee: Number(shippingFee || 0),
-        total: Number(total || 0),
-        orderStatus: 'CONFIRMED',
-        paymentStatus: 'PAID',
-        paymentMethod: paymentMethod.toUpperCase(),
-        paymentDetails: paymentDetails || {
-          gatewayTransactionId: `pay_${Date.now().toString(36)}`,
-          paymentTime: new Date().toISOString(),
-          paymentMode: paymentMethod,
+      const taxGst = Math.round(
+        (calculatedSubtotal * APP_CONFIG.financial.gstPercent) / 100
+      );
+      const shippingFee =
+        calculatedSubtotal > APP_CONFIG.financial.freeShippingThreshold
+          ? 0
+          : APP_CONFIG.financial.standardShippingFee;
+      const paymentMethodValue =
+        typeof paymentMethod === 'string' ? paymentMethod.toUpperCase() : 'UPI';
+
+      return tx.order.create({
+        data: {
+          orderNumber: `AV-${Math.floor(100000 + Math.random() * 900000)}`,
+          userId: dbUser.id,
+          customerName: customerName.trim(),
+          customerEmail: normalizedEmail,
+          customerPhone: customerPhone || '+91 98200 12345',
+          shippingAddress: shippingAddress || {},
+          subtotal: calculatedSubtotal,
+          taxGst,
+          shippingFee,
+          total: calculatedSubtotal + taxGst + shippingFee,
+          orderStatus: 'CONFIRMED',
+          paymentStatus: 'PAID',
+          paymentMethod: paymentMethodValue,
+          paymentDetails: paymentDetails || {
+            gatewayTransactionId: `pay_${Date.now().toString(36)}`,
+            paymentTime: new Date().toISOString(),
+            paymentMode: paymentMethodValue,
+          },
+          scheduledPickup: {
+            courierPartner: 'Delhivery Art Logistics',
+            awbNumber: `DEL-ART-${Math.floor(1000000 + Math.random() * 9000000)}`,
+            pickupDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            timeSlot: '2:00 PM - 5:00 PM',
+            status: 'SCHEDULED',
+            pickupAddress: 'Artist Studio, Whitefield Art District, Bengaluru',
+            contactPerson: 'Studio Logistics Manager',
+            contactPhone: '+91 98450 11223',
+          },
+          items: { create: preparedItems },
+          payouts: { create: preparedPayouts },
         },
-        scheduledPickup,
-        items: {
-          create: preparedItems,
-        },
-        payouts: {
-          create: preparedPayouts,
-        },
-      },
-      include: {
-        items: true,
-        payouts: true,
-      },
+        include: { items: true, payouts: true },
+      });
     });
 
     return NextResponse.json({ success: true, data: newOrder }, { status: 201 });
   } catch (error: any) {
     console.error('API Error /api/orders POST:', error);
+    if (error instanceof OrderRequestError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: error.status }
+      );
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

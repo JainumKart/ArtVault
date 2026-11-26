@@ -38,13 +38,14 @@ export default function ArtworkDetailPage() {
   const { addItem, openCart } = useCart();
 
   const artworkId = params.id as string;
-  const initialArtwork = mockArtworks.find(a => a.id === artworkId || a.slug === artworkId) || mockArtworks[0];
-  const [artwork, setArtwork] = useState<Artwork>(initialArtwork);
+  const initialArtwork = mockArtworks.find(a => a.id === artworkId || a.slug === artworkId) || null;
+  const [artwork, setArtwork] = useState<Artwork | null>(initialArtwork);
   const [isLiveRecord, setIsLiveRecord] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Selected variant & framing
-  const [selectedVariant, setSelectedVariant] = useState<ArtworkVariant>(
-    initialArtwork.variants.find(v => v.type === 'ORIGINAL') || initialArtwork.variants[0]
+  const [selectedVariant, setSelectedVariant] = useState<ArtworkVariant | null>(
+    initialArtwork?.variants.find(v => v.type === 'ORIGINAL') || initialArtwork?.variants[0] || null
   );
   const [selectedFraming, setSelectedFraming] = useState<FramingOption>(
     standardFramingOptions[0]
@@ -52,9 +53,12 @@ export default function ArtworkDetailPage() {
   const [isVisualizerOpen, setIsVisualizerOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  // Fetch live artwork details from Supabase if available
+  // Fetch live artwork details from the database.
   useEffect(() => {
-    if (!artworkId) return;
+    if (!artworkId) {
+      setIsLoading(false);
+      return;
+    }
     fetch(`/api/artworks/${artworkId}`)
       .then(res => res.json())
       .then(resData => {
@@ -67,8 +71,9 @@ export default function ArtworkDetailPage() {
         }
       })
       .catch(err => {
-        console.warn('Fallback to local mock artwork:', err);
-      });
+        console.warn('Could not fetch artwork details:', err);
+      })
+      .finally(() => setIsLoading(false));
   }, [artworkId]);
 
   // Accordion state for below-the-fold details
@@ -83,6 +88,24 @@ export default function ArtworkDetailPage() {
   const toggleAccordion = (key: string) => {
     setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  if (!artwork || !selectedVariant) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
+        <h1 className="font-serif text-2xl font-bold text-foreground">
+          {isLoading ? 'Loading artwork...' : 'Artwork not found'}
+        </h1>
+        {!isLoading && (
+          <>
+            <p className="text-sm text-muted-foreground">This artwork may have been removed or is not available.</p>
+            <Link href="/artworks" className="inline-flex text-sm font-semibold text-primary hover:underline">
+              Browse available artworks
+            </Link>
+          </>
+        )}
+      </div>
+    );
+  }
 
   // Price calculation
   const currentTotalPrice = selectedVariant.price + selectedFraming.priceDelta;

@@ -11,6 +11,7 @@ export async function GET(
 
     const artwork = await prisma.artwork.findFirst({
       where: {
+        status: 'AVAILABLE',
         OR: [{ id }, { slug: id }],
       },
       include: {

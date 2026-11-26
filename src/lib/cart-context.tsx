@@ -46,9 +46,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     variant: ArtworkVariant,
     framing?: FramingOption
   ) => {
+    if (!variant.inStock) {
+      setIsCartOpen(true);
+      return;
+    }
+
     const existing = items.find(
       i => i.artworkId === artwork.id && i.variantId === variant.id && i.selectedFraming?.id === framing?.id
     );
+
+    const variantQuantity = items
+      .filter(i => i.artworkId === artwork.id && i.variantId === variant.id)
+      .reduce((quantity, item) => quantity + item.quantity, 0);
+
+    if (
+      variant.type === 'LIMITED_PRINT' &&
+      variant.editionAvailable !== undefined &&
+      variantQuantity >= variant.editionAvailable
+    ) {
+      setIsCartOpen(true);
+      return;
+    }
 
     // If it's an original, maximum quantity allowed in cart is 1
     if (variant.type === 'ORIGINAL') {

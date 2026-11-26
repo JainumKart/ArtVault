@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { mockArtists, mockArtworks, standardFramingOptions } from '@/lib/mock-data';
-import { Artwork } from '@/types';
+import { standardFramingOptions } from '@/lib/mock-data';
+import { ArtistProfile, Artwork } from '@/types';
 import { formatINR } from '@/lib/utils';
 import { useCart } from '@/lib/cart-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
+import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
 import {
   CheckCircle2,
   Star,
@@ -25,10 +26,57 @@ export default function ArtistDetailPage() {
   const params = useParams();
   const { addItem, openCart } = useCart();
   const artistId = params.id as string;
-  const artist = mockArtists.find(a => a.id === artistId) || mockArtists[0];
-  const artistArtworks = mockArtworks.filter(a => a.artistId === artist.id);
-
+  const [artist, setArtist] = useState<ArtistProfile | null>(null);
+  const [artistArtworks, setArtistArtworks] = useState<Artwork[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [visualizerArtwork, setVisualizerArtwork] = useState<Artwork | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/artists/${artistId}`)
+      .then(res => res.json())
+      .then(resData => {
+        if (!resData.success || !resData.data) return;
+        const profile = resData.data;
+        if (!profile.artworks?.length) return;
+        setArtist({
+          id: profile.id,
+          userId: profile.userId,
+          displayName: profile.displayName,
+          slug: profile.slug,
+          bio: profile.bio,
+          statement: profile.statement,
+          avatarUrl: profile.avatarUrl || '',
+          bannerUrl: profile.bannerUrl || '',
+          location: profile.location,
+          exhibitions: profile.exhibitions || [],
+          commissionRate: profile.commissionRate,
+          kycStatus: profile.kycStatus,
+          totalSales: profile.totalSales,
+          rating: profile.rating,
+          artworkCount: profile.artworks.length,
+          joinedDate: profile.createdAt,
+        });
+        setArtistArtworks(profile.artworks.map(mapDbArtworkToFrontend));
+      })
+      .catch(error => console.error('Could not fetch artist profile:', error))
+      .finally(() => setIsLoading(false));
+  }, [artistId]);
+
+  if (isLoading) {
+    return <div className="py-20 text-center text-sm text-muted-foreground">Loading artist profile...</div>;
+  }
+
+  if (!artist) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
+        <h1 className="font-serif text-2xl font-bold text-foreground">Artist profile not found</h1>
+        <p className="text-sm text-muted-foreground">This artist may not have a public studio profile yet.</p>
+        <Link href="/artists" className="inline-flex text-sm font-semibold text-primary hover:underline">
+          Browse artists
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 pb-20">
@@ -148,7 +196,11 @@ export default function ArtistDetailPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {artistArtworks.map(artwork => {
+            {artistArtworks.length === 0 ? (
+              <p className="sm:col-span-2 rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                This artist has not listed any artworks yet.
+              </p>
+            ) : artistArtworks.map(artwork => {
               const originalVariant = artwork.variants.find(v => v.type === 'ORIGINAL') || artwork.variants[0];
 
               return (

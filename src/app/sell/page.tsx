@@ -132,7 +132,7 @@ export default function SellPage() {
                     required
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="e.g. Meera Nambiar"
+                    placeholder="e.g. Pragya Jain"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 outline-hidden"
                   />
                 </div>

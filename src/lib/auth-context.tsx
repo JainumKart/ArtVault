@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, ArtistProfile } from '@/types';
-import { mockArtists } from './mock-data';
 
 export interface StoredAccount extends User {
   password?: string;
@@ -39,14 +38,14 @@ interface AuthContextType {
   setRole: (role: UserRole) => void;
 }
 
-// Pre-seeded system accounts for evaluation and realistic access control
+// Demo accounts used by the local authentication flow.
 export const SEED_ACCOUNTS: StoredAccount[] = [
   {
     id: 'user-admin-root',
-    name: 'ArtVault Platform Curator',
+    name: 'ArtVault Admin',
     email: 'admin@artvault.in',
     password: 'AdminPassword123!',
-    phone: '+91 99000 11223',
+    phone: '+91 90000 00001',
     role: 'ADMIN',
     avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
     isPhoneVerified: true,
@@ -54,11 +53,11 @@ export const SEED_ACCOUNTS: StoredAccount[] = [
     createdAt: '2023-01-01T00:00:00Z',
   },
   {
-    id: 'user-artist-3',
-    name: 'Meera Nambiar',
-    email: 'artist@artvault.in',
-    password: 'ArtistPassword123!',
-    phone: '+91 98470 54321',
+    id: 'user-artist-pragya',
+    name: 'Pragya Jain',
+    email: 'pragya@artvault.in',
+    password: 'PragyaPassword123!',
+    phone: '+91 90000 00002',
     role: 'ARTIST',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
     isPhoneVerified: true,
@@ -66,32 +65,34 @@ export const SEED_ACCOUNTS: StoredAccount[] = [
     createdAt: '2023-11-20T00:00:00Z',
   },
   {
-    id: 'user-collector-demo',
-    name: 'Devika Sharma',
-    email: 'collector@artvault.in',
-    password: 'CollectorPassword123!',
-    phone: '+91 98201 54321',
+    id: 'user-collector-kartik',
+    name: 'Kartik Jain',
+    email: 'kartik@artvault.in',
+    password: 'KartikPassword123!',
+    phone: '+91 90000 00003',
     role: 'COLLECTOR',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
     isPhoneVerified: true,
     isEmailVerified: true,
     createdAt: '2024-01-15T00:00:00Z',
-    savedAddresses: [
-      {
-        id: 'addr-demo-1',
-        fullName: 'Devika Sharma',
-        phone: '+91 98201 54321',
-        streetAddress: 'Flat 902, Lodha Bellissimo, NM Joshi Marg',
-        apartment: 'Tower B, 9th Floor',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400011',
-        country: 'India',
-        isDefault: true,
-      },
-    ],
   },
 ];
+
+const LEGACY_SEED_EMAILS = [
+  'artist@artvault.in',
+  'vikramaditya@artvault.in',
+  'zubin@artvault.in',
+  'collector@artvault.in',
+];
+
+const normalizeIndianPhone = (phone: string): string | null => {
+  const digits = phone.replace(/\D/g, '');
+  const nationalNumber = digits.startsWith('91') ? digits.slice(2) : digits;
+  return /^[6-9]\d{9}$/.test(nationalNumber) ? nationalNumber : null;
+};
+
+const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const STORAGE_KEYS = {
   SESSION: 'artvault_active_session',
@@ -112,14 +113,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return SEED_ACCOUNTS;
     const raw = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(SEED_ACCOUNTS));
+      saveStoredAccounts(SEED_ACCOUNTS);
       return SEED_ACCOUNTS;
     }
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      return SEED_ACCOUNTS;
+      if (!Array.isArray(parsed)) {
+        saveStoredAccounts(SEED_ACCOUNTS);
+        return SEED_ACCOUNTS;
+      }
+      const seedEmails = new Set([
+        ...SEED_ACCOUNTS.map(account => account.email),
+        ...LEGACY_SEED_EMAILS,
+      ]);
+      const accounts = [
+        ...parsed.filter(
+          (account): account is StoredAccount =>
+            account && typeof account.email === 'string' && !seedEmails.has(account.email.toLowerCase())
+        ),
+        ...SEED_ACCOUNTS,
+      ];
+      saveStoredAccounts(accounts);
+      return accounts;
     } catch {
+      saveStoredAccounts(SEED_ACCOUNTS);
       return SEED_ACCOUNTS;
     }
   };
@@ -132,11 +149,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize session on mount
   useEffect(() => {
+    getStoredAccounts();
     const rawSession = localStorage.getItem(STORAGE_KEYS.SESSION);
     if (rawSession) {
       try {
         const sessionUser: User = JSON.parse(rawSession);
-        setUser(sessionUser);
+        const seededAccount = SEED_ACCOUNTS.find(
+          account => account.email.toLowerCase() === sessionUser.email.toLowerCase()
+        );
+        if (seededAccount) {
+          const { password: _, ...updatedSession } = seededAccount;
+          setUser(updatedSession);
+          localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(updatedSession));
+        } else if (LEGACY_SEED_EMAILS.includes(sessionUser.email.toLowerCase())) {
+          localStorage.removeItem(STORAGE_KEYS.SESSION);
+          setUser(null);
+        } else {
+          setUser(sessionUser);
+        }
       } catch {
         localStorage.removeItem(STORAGE_KEYS.SESSION);
         setUser(null);
@@ -145,19 +175,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Default to logged-out state
       setUser(null);
     }
-
-    // Ensure seed accounts exist in storage
-    const existing = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
-    if (!existing) {
-      localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(SEED_ACCOUNTS));
-    }
   }, []);
 
   // Sync active artist profile when role changes
   useEffect(() => {
     if (user?.role === 'ARTIST') {
-      const match = mockArtists.find(a => a.userId === user.id) || mockArtists[0];
-      setActiveArtistProfile(match);
+      setActiveArtistProfile(null);
+      let isCurrent = true;
+      fetch(`/api/artists/${encodeURIComponent(user.id)}`)
+        .then(res => res.json())
+        .then(resData => {
+          if (!isCurrent || !resData.success || !resData.data) return;
+          const profile = resData.data;
+          setActiveArtistProfile({
+            id: profile.id,
+            userId: profile.userId,
+            displayName: profile.displayName,
+            slug: profile.slug,
+            bio: profile.bio,
+            statement: profile.statement,
+            avatarUrl: profile.avatarUrl || user.avatarUrl,
+            bannerUrl: profile.bannerUrl || '',
+            location: profile.location,
+            exhibitions: profile.exhibitions || [],
+            commissionRate: profile.commissionRate,
+            kycStatus: profile.kycStatus,
+            totalSales: profile.totalSales,
+            rating: profile.rating,
+            artworkCount: profile.artworks?.length || 0,
+            joinedDate: profile.createdAt,
+          });
+        })
+        .catch(error => {
+          if (isCurrent) console.error('Could not fetch artist studio profile:', error);
+        });
+      return () => {
+        isCurrent = false;
+      };
     } else {
       setActiveArtistProfile(null);
     }
@@ -198,16 +252,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // User Registration (Sign Up)
   const signUp = async (params: SignUpParams): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = params.email.trim().toLowerCase();
+    const normalizedPhone = normalizeIndianPhone(params.phone);
     if (!params.name.trim()) {
       return { success: false, error: 'Please enter your full name.' };
     }
-    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+    if (!isValidEmail(cleanEmail)) {
       return { success: false, error: 'Please enter a valid email address.' };
     }
     if (params.password.length < 6) {
       return { success: false, error: 'Password must be at least 6 characters long.' };
     }
-    if (params.phone.replace(/\D/g, '').length < 10) {
+    if (!normalizedPhone) {
       return { success: false, error: 'Please provide a valid 10-digit mobile number.' };
     }
 
@@ -216,12 +271,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (existing) {
       return { success: false, error: 'An account with this email address already exists. Please sign in.' };
     }
+    if (accounts.some(account => normalizeIndianPhone(account.phone) === normalizedPhone)) {
+      return { success: false, error: 'An account with this mobile number already exists. Please sign in.' };
+    }
 
     const newUser: StoredAccount = {
       id: `user-${Date.now()}`,
       name: params.name.trim(),
       email: cleanEmail,
-      phone: params.phone.startsWith('+91') ? params.phone : `+91 ${params.phone.replace(/\D/g, '')}`,
+      phone: `+91 ${normalizedPhone}`,
       password: params.password,
       role: params.role, // 'COLLECTOR' | 'ARTIST'
       avatarUrl:
@@ -261,6 +319,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Phone OTP dispatch simulation
   const sendPhoneOtp = async (phone: string): Promise<{ success: boolean; demoOtp: string; error?: string }> => {
+    if (!normalizeIndianPhone(phone)) {
+      return { success: false, demoOtp: '', error: 'Please enter a valid 10-digit mobile number.' };
+    }
     return new Promise(resolve => {
       setTimeout(() => {
         resolve({ success: true, demoOtp: '123456' });
@@ -270,13 +331,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Phone OTP verification
   const verifyPhoneOtp = async (phone: string, otp: string): Promise<{ success: boolean; error?: string }> => {
-    if (otp !== '123456' && otp.length !== 6) {
+    if (otp !== '123456') {
       return { success: false, error: 'Invalid verification code. Please enter 123456.' };
     }
 
-    const cleanPhone = phone.replace(/\D/g, '');
+    const cleanPhone = normalizeIndianPhone(phone);
+    if (!cleanPhone) {
+      return { success: false, error: 'Please enter a valid 10-digit mobile number.' };
+    }
     const accounts = getStoredAccounts();
-    const matched = accounts.find(a => a.phone.replace(/\D/g, '').includes(cleanPhone));
+    const matched = accounts.find(a => normalizeIndianPhone(a.phone) === cleanPhone);
 
     if (matched) {
       const { password: _, ...sessionUser } = matched;
@@ -309,6 +373,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Email OTP dispatch simulation
   const sendEmailOtp = async (email: string): Promise<{ success: boolean; demoOtp: string; error?: string }> => {
+    if (!isValidEmail(email.trim())) {
+      return { success: false, demoOtp: '', error: 'Please enter a valid email address.' };
+    }
     return new Promise(resolve => {
       setTimeout(() => {
         resolve({ success: true, demoOtp: '654321' });
@@ -318,11 +385,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Email OTP verification
   const verifyEmailOtp = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
-    if (otp !== '654321' && otp.length !== 6) {
+    if (otp !== '654321') {
       return { success: false, error: 'Invalid verification code. Please enter 654321.' };
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    if (!isValidEmail(cleanEmail)) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
     const accounts = getStoredAccounts();
     const matched = accounts.find(a => a.email.toLowerCase() === cleanEmail);
 
@@ -401,7 +471,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Legacy setRole helper (maps to seeded account login for testing, but properly authenticated)
   const setRole = (newRole: UserRole) => {
-    const seed = SEED_ACCOUNTS.find(a => a.role === newRole) || SEED_ACCOUNTS[0];
+    const seed = SEED_ACCOUNTS.find(a => a.role === newRole);
+    if (!seed) return;
     const { password: _, ...sessionUser } = seed;
     setUser(sessionUser);
     localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionUser));

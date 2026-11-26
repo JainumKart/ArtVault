@@ -4,19 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
-  mockArtworks,
-  mockOrders,
-  mockPayouts,
   mockCategories,
+  mockPayouts,
 } from '@/lib/mock-data';
 import { formatINR, formatDate } from '@/lib/utils';
 import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
-import { Order } from '@/types';
+import { ArtistProfile, Artwork, Order, User } from '@/types';
 import { STYLE_CLASSES, APP_CONFIG } from '@/constants';
 import {
   Palette,
   Package,
-  TrendingUp,
   PlusCircle,
   Truck,
   CheckCircle2,
@@ -34,7 +31,6 @@ import {
 
 export default function ArtistDashboardPage() {
   const { user, role, activeArtistProfile, openAuthModal, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'listings' | 'new-listing' | 'orders' | 'ledger'>('listings');
 
   // 1. Case: Unauthenticated Visitor -> Require Artist Sign In
   if (!user) {
@@ -123,16 +119,26 @@ export default function ArtistDashboardPage() {
     );
   }
 
+  return <ArtistDashboardContent user={user} activeArtistProfile={activeArtistProfile} />;
+}
+
+function ArtistDashboardContent({
+  user,
+  activeArtistProfile,
+}: {
+  user: User;
+  activeArtistProfile: ArtistProfile | null;
+}) {
+  const [activeTab, setActiveTab] = useState<'listings' | 'new-listing' | 'orders' | 'ledger'>('listings');
+
   // Filter artworks for this artist
-  const artistId = activeArtistProfile?.id || 'artist-1';
-  const [artistArtworks, setArtistArtworks] = useState(
-    mockArtworks.filter(a => a.artistId === artistId)
-  );
+  const artistId = activeArtistProfile?.id || '';
+  const [artistArtworks, setArtistArtworks] = useState<Artwork[]>([]);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
 
   // New Listing Form State
   const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState(mockCategories[0].id);
+  const [newCategory, setNewCategory] = useState(mockCategories[0]?.id || '');
   const [newMedium, setNewMedium] = useState('Oil on Canvas');
   const [newSurface, setNewSurface] = useState('Belgian Linen Canvas');
   const [newPrice, setNewPrice] = useState('45000');
@@ -147,9 +153,10 @@ export default function ArtistDashboardPage() {
     'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80'
   );
   const [listingSuccessMsg, setListingSuccessMsg] = useState<string | null>(null);
+  const [listingErrorMsg, setListingErrorMsg] = useState<string | null>(null);
 
   // Scheduled pickup dispatch state
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   // Fetch artist listings & orders from Supabase DB
   useEffect(() => {
@@ -158,106 +165,32 @@ export default function ArtistDashboardPage() {
       .then(resData => {
         if (resData.success && Array.isArray(resData.data)) {
           const mapped = resData.data.map(mapDbArtworkToFrontend);
-          const filtered = mapped.filter((a: any) =>
-            a.artistId === artistId ||
-            (activeArtistProfile && a.artistName.toLowerCase().includes(activeArtistProfile.displayName.toLowerCase()))
-          );
-          if (filtered.length > 0) {
-            setArtistArtworks(filtered);
-            setIsLiveConnected(true);
-          }
+          const filtered = mapped.filter((a: Artwork) => a.artistId === artistId);
+          setArtistArtworks(filtered);
+          setIsLiveConnected(true);
         }
       })
-      .catch(() => {});
+      .catch(error => console.error('Could not fetch artist listings:', error));
 
+    if (!artistId) return;
     fetch(`/api/orders?artistId=${artistId}`)
       .then(res => res.json())
       .then(resData => {
-        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        if (resData.success && Array.isArray(resData.data)) {
           setOrders(resData.data);
         }
       })
-      .catch(() => {});
+      .catch(error => console.error('Could not fetch artist orders:', error));
   }, [artistId, activeArtistProfile]);
 
   const handleCreateListing = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    if (!activeArtistProfile) {
+      setListingErrorMsg('Set up your artist studio profile before creating a listing.');
+      return;
+    }
 
-    const newArt: any = {
-      id: `art-custom-${Date.now()}`,
-      title: newTitle,
-      slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      artistId,
-      artistName: activeArtistProfile?.displayName || 'Meera Nambiar',
-      artistAvatar: activeArtistProfile?.avatarUrl || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
-      artistLocation: activeArtistProfile?.location || 'Bengaluru, Karnataka',
-      categoryId: newCategory,
-      categoryName: mockCategories.find(c => c.id === newCategory)?.name || 'Oil Paintings',
-      medium: newMedium as any,
-      surface: newSurface,
-      style: 'Contemporary' as any,
-      year: new Date().getFullYear(),
-      description: `Newly submitted fine artwork by ${activeArtistProfile?.displayName || 'Artist'}.`,
-      images: [newImageUrl],
-      isOriginalAvailable: true,
-      originalPrice: parseFloat(newPrice) || 35000,
-      minPrintPrice: hasLimitedPrints ? parseFloat(printPrice) || 5500 : undefined,
-      tags: ['Original', newMedium],
-      featured: false,
-      curatorPick: false,
-      shippingInfo: {
-        packaging: (newPackaging.includes('Tube') ? 'ROLLED_TUBE' : 'WOODEN_CRATE') as any,
-        pickupAvailable: true,
-        estimatedDays: '3-5 business days',
-      },
-      variants: [
-        {
-          id: `var-orig-${Date.now()}`,
-          artworkId: `art-custom-${Date.now()}`,
-          title: 'Unique 1-of-1 Original',
-          type: 'ORIGINAL' as any,
-          price: parseFloat(newPrice) || 35000,
-          dimensions: {
-            heightCm: parseFloat(newHeight) || 60,
-            widthCm: parseFloat(newWidth) || 80,
-          },
-          framingOptions: [],
-          weightKg: parseFloat(newWeight) || 2.0,
-          inStock: true,
-        },
-        ...(hasLimitedPrints
-          ? [
-              {
-                id: `var-print-${Date.now()}`,
-                artworkId: `art-custom-${Date.now()}`,
-                title: 'Archival Giclée Print on Cotton Rag',
-                type: 'LIMITED_PRINT' as any,
-                price: parseFloat(printPrice) || 5500,
-                editionTotal: parseInt(printTotalEdition) || 50,
-                editionAvailable: parseInt(printTotalEdition) || 50,
-                dimensions: {
-                  heightCm: parseFloat(newHeight) || 60,
-                  widthCm: parseFloat(newWidth) || 80,
-                },
-                framingOptions: [],
-                weightKg: 1.0,
-                inStock: true,
-              },
-            ]
-          : []),
-      ],
-      certificateOfAuthenticity: {
-        id: `coa-${Date.now()}`,
-        qrCodeHash: `HASH-${Date.now()}`,
-        tokenNumber: `COA-VER-${Date.now().toString().slice(-6)}`,
-        issueDate: new Date().toISOString(),
-        signedByArtist: true,
-        verifiedByCurator: false,
-      },
-    };
-
-    // Save directly to Supabase via API
     try {
       const res = await fetch('/api/artworks', {
         method: 'POST',
@@ -280,17 +213,20 @@ export default function ArtistDashboardPage() {
         }),
       });
       const resData = await res.json();
-      if (resData.success && resData.data) {
-        const mapped = mapDbArtworkToFrontend(resData.data);
-        setArtistArtworks(prev => [mapped, ...prev]);
-      } else {
-        setArtistArtworks(prev => [newArt, ...prev]);
+      if (!res.ok || !resData.success || !resData.data) {
+        setListingErrorMsg(resData.error || 'Artwork listing could not be saved.');
+        return;
       }
-    } catch {
-      setArtistArtworks(prev => [newArt, ...prev]);
+      const mapped = mapDbArtworkToFrontend(resData.data);
+      setArtistArtworks(prev => [mapped, ...prev]);
+    } catch (error) {
+      console.error('Could not create artwork listing:', error);
+      setListingErrorMsg('Artwork listing could not be saved. Please try again.');
+      return;
     }
 
-    setListingSuccessMsg(`Artwork "${newTitle}" registered in Supabase and submitted for curator review!`);
+    setListingErrorMsg(null);
+    setListingSuccessMsg(`Artwork "${newTitle}" was created successfully.`);
     setActiveTab('listings');
   };
 
@@ -322,18 +258,22 @@ export default function ArtistDashboardPage() {
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
                 Artist Studio &amp; Listing Dashboard
               </h1>
-              <span className={STYLE_CLASSES.badges.verifiedGreen}>
-                KYC Verified
-              </span>
+              {activeArtistProfile && (
+                <span className={STYLE_CLASSES.badges.verifiedGreen}>
+                  KYC {activeArtistProfile.kycStatus}
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Logged in as: <strong>{activeArtistProfile?.displayName || 'Meera Nambiar'}</strong> &bull; Bank: HDFC Bank (••4492) &bull; {APP_CONFIG.financial.defaultCommissionPercent}% Standard Platform Commission Split
+              Logged in as: <strong>{activeArtistProfile?.displayName || user?.name || 'Artist'}</strong>
+              {' '}&bull; {APP_CONFIG.financial.defaultCommissionPercent}% standard platform commission
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setActiveTab('new-listing')}
+          disabled={!activeArtistProfile}
           className={STYLE_CLASSES.buttons.primary}
         >
           <PlusCircle className="w-4 h-4" />
@@ -341,32 +281,36 @@ export default function ArtistDashboardPage() {
         </button>
       </div>
 
+      {!activeArtistProfile && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
+          Your artist studio profile is not set up yet. A profile is required before you can create listings.
+        </div>
+      )}
+
       {/* Financial Overview Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
           <span className="text-xs text-muted-foreground font-medium">Gross Artwork Sales</span>
-          <p className="font-serif text-2xl font-bold text-foreground">₹2,84,000</p>
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> +18% from last month
-          </p>
+          <p className="font-serif text-2xl font-bold text-foreground">{formatINR(0)}</p>
+          <p className="text-[11px] text-muted-foreground">No sales recorded</p>
         </div>
 
         <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
           <span className="text-xs text-muted-foreground font-medium">Platform Commission ({APP_CONFIG.financial.defaultCommissionPercent}%)</span>
-          <p className="font-serif text-2xl font-bold text-foreground">₹56,800</p>
-          <p className="text-[11px] text-muted-foreground">Standard curated marketplace fee</p>
+          <p className="font-serif text-2xl font-bold text-foreground">{formatINR(0)}</p>
+          <p className="text-[11px] text-muted-foreground">No commissions recorded</p>
         </div>
 
         <div className="bg-card dark:bg-card/80 border border-border dark:border-purple-900/30 rounded-2xl p-5 space-y-2 shadow-2xs">
           <span className="text-xs text-muted-foreground font-medium">TDS Deducted ({APP_CONFIG.financial.tdsSection194OPercent}% u/s 194-O)</span>
-          <p className="font-serif text-2xl font-bold text-foreground">₹2,840</p>
-          <p className="text-[11px] text-muted-foreground">Remitted to IT Dept (Form 26AS)</p>
+          <p className="font-serif text-2xl font-bold text-foreground">{formatINR(0)}</p>
+          <p className="text-[11px] text-muted-foreground">No TDS recorded</p>
         </div>
 
         <div className="bg-card dark:bg-gradient-to-br dark:from-purple-950/20 dark:to-blue-950/20 border border-primary/20 dark:border-purple-500/30 rounded-2xl p-5 space-y-2 shadow-2xs">
           <span className="text-xs text-primary dark:text-purple-300 font-bold">Net Cleared Studio Payout</span>
-          <p className="font-serif text-2xl font-bold text-primary dark:text-purple-400">₹2,24,360</p>
-          <p className="text-[11px] text-muted-foreground">Transferred to Bank Account</p>
+          <p className="font-serif text-2xl font-bold text-primary dark:text-purple-400">{formatINR(0)}</p>
+          <p className="text-[11px] text-muted-foreground">No payouts recorded</p>
         </div>
       </div>
 
@@ -425,6 +369,11 @@ export default function ArtistDashboardPage() {
           </button>
         </div>
       )}
+      {listingErrorMsg && (
+        <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs">
+          {listingErrorMsg}
+        </div>
+      )}
 
       {/* TAB 1: LISTINGS VIEW */}
       {activeTab === 'listings' && (
@@ -451,6 +400,13 @@ export default function ArtistDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
+                {artistArtworks.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 px-4 text-center text-sm text-muted-foreground">
+                      No artwork listings yet.
+                    </td>
+                  </tr>
+                )}
                 {artistArtworks.map(art => {
                   const orig = art.variants.find(v => v.type === 'ORIGINAL') || art.variants[0];
                   return (
@@ -514,6 +470,12 @@ export default function ArtistDashboardPage() {
               Specify packaging details, dimensional measurements, and optional limited edition prints.
             </p>
           </div>
+
+          {!activeArtistProfile && (
+            <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
+              Set up your artist studio profile before submitting an artwork.
+            </p>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="sm:col-span-2">

@@ -6,10 +6,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const kycStatus = searchParams.get('kycStatus');
+    const hasAvailableArtworks = searchParams.get('hasAvailableArtworks') === 'true';
 
     const where: any = {};
     if (kycStatus) {
       where.kycStatus = kycStatus;
+    }
+    if (hasAvailableArtworks) {
+      where.artworks = { some: { status: 'AVAILABLE' } };
     }
 
     const artists = await prisma.artistProfile.findMany({
@@ -25,7 +29,9 @@ export async function GET(req: NextRequest) {
         },
         _count: {
           select: {
-            artworks: true,
+            artworks: {
+              where: hasAvailableArtworks ? { status: 'AVAILABLE' } : undefined,
+            },
           },
         },
       },

@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  mockArtworks,
   mockCategories,
-  mockArtists,
   standardFramingOptions,
 } from '@/lib/mock-data';
-import { Artwork, FramingOption } from '@/types';
+import { Artwork, ArtistProfile, FramingOption } from '@/types';
 import { formatINR } from '@/lib/utils';
+import { mapDbArtworkToFrontend } from '@/lib/data-mapper';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { RoomVisualizer } from '@/components/artwork/RoomVisualizer';
@@ -32,9 +31,30 @@ export default function HomePage() {
   const { addItem, openCart } = useCart();
   const { openAuthModal } = useAuth();
   const [visualizerArtwork, setVisualizerArtwork] = useState<Artwork | null>(null);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [artists, setArtists] = useState<ArtistProfile[]>([]);
 
-  // Filter featured artworks
-  const featuredArtworks = mockArtworks.filter(a => a.featured);
+  useEffect(() => {
+    fetch('/api/artworks')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data)) {
+          setArtworks(resData.data.map(mapDbArtworkToFrontend));
+        }
+      })
+      .catch(error => console.error('Could not fetch featured artworks:', error));
+
+    fetch('/api/artists?hasAvailableArtworks=true')
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success && Array.isArray(resData.data)) {
+          setArtists(resData.data);
+        }
+      })
+      .catch(error => console.error('Could not fetch featured artists:', error));
+  }, []);
+
+  const featuredArtworks = artworks.filter(a => a.featured);
 
   return (
     <div className={STYLE_CLASSES.layout.sectionSpacing}>
@@ -167,6 +187,15 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
+              {featuredArtworks.length === 0 && (
+                <div className="relative min-h-72 rounded-2xl border border-border bg-card/80 p-8 flex flex-col items-center justify-center text-center gap-3">
+                  <Sparkles className="w-8 h-8 text-primary" />
+                  <h2 className="font-serif text-xl font-bold text-foreground">A new collection is taking shape</h2>
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Original artworks will appear here as artists join ArtVault.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -204,7 +233,9 @@ export default function HomePage() {
                 <h4 className="font-serif font-bold text-sm leading-tight group-hover:text-amber-300 dark:group-hover:text-purple-300 transition">
                   {cat.name}
                 </h4>
-                <p className="text-[11px] text-zinc-300 mt-0.5">{cat.artworkCount} pieces</p>
+                <p className="text-[11px] text-zinc-300 mt-0.5">
+                  {artworks.filter(artwork => artwork.categoryId === cat.id).length} pieces
+                </p>
               </div>
             </Link>
           ))}
@@ -222,12 +253,16 @@ export default function HomePage() {
             href="/artworks"
             className="text-sm font-semibold text-primary dark:text-purple-400 hover:underline flex items-center gap-1 mt-2 sm:mt-0"
           >
-            Browse Gallery Catalog ({mockArtworks.length}) &rarr;
+            Browse Gallery Catalog ({artworks.length}) &rarr;
           </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {mockArtworks.slice(0, 6).map(artwork => {
+          {artworks.length === 0 ? (
+            <p className="sm:col-span-2 lg:col-span-3 rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+              No artworks have been listed yet. Check back soon or apply to join as an artist.
+            </p>
+          ) : artworks.slice(0, 6).map(artwork => {
             const originalVariant = artwork.variants.find(v => v.type === 'ORIGINAL') || artwork.variants[0];
 
             return (
@@ -423,7 +458,11 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {mockArtists.map(artist => (
+          {artists.length === 0 ? (
+            <p className="md:col-span-3 rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+              Artist profiles will appear here as creators join the marketplace.
+            </p>
+          ) : artists.map(artist => (
             <div
               key={artist.id}
               className={STYLE_CLASSES.cards.interactive + " p-6 justify-between space-y-4"}

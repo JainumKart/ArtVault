@@ -65,6 +65,7 @@ export default function CheckoutPage() {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStep, setPaymentStep] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (items.length === 0) {
     return (
@@ -89,6 +90,7 @@ export default function CheckoutPage() {
   const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setCheckoutError(null);
 
     // Simulate Razorpay Indian Gateway Workflow
     setPaymentStep('Connecting to Razorpay Route Gateway...');
@@ -108,8 +110,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           userId: user?.id,
           customerName: fullName || user?.name || 'ArtVault Collector',
-          customerEmail: user?.email || 'collector@artvault.in',
-          customerPhone: phone || user?.phone || '+91 98200 12345',
+          customerEmail: user?.email || 'kartik@artvault.in',
+          customerPhone: phone || user?.phone || '+91 90000 00003',
           shippingAddress: {
             fullName,
             phone,
@@ -153,21 +155,30 @@ export default function CheckoutPage() {
       });
 
       const resData = await res.json();
-      if (resData.success && resData.data) {
-        generatedOrderNumber = resData.data.orderNumber;
+      if (!res.ok || !resData.success || !resData.data) {
+        throw new Error(resData.error || 'Order could not be completed. Please try again.');
+      }
+      generatedOrderNumber = resData.data.orderNumber;
 
-        // Cache locally for instant fast-render in Collector Vault
-        try {
-          const stored = localStorage.getItem('artvault_local_orders');
-          const list = stored ? JSON.parse(stored) : [];
-          list.unshift(resData.data);
-          localStorage.setItem('artvault_local_orders', JSON.stringify(list));
-        } catch (storageErr) {
-          console.warn('Local storage write warning:', storageErr);
-        }
+      // Cache locally for instant fast-render in Collector Vault
+      try {
+        const stored = localStorage.getItem('artvault_local_orders');
+        const list = stored ? JSON.parse(stored) : [];
+        list.unshift(resData.data);
+        localStorage.setItem('artvault_local_orders', JSON.stringify(list));
+      } catch (storageErr) {
+        console.warn('Local storage write warning:', storageErr);
       }
     } catch (apiErr) {
-      console.warn('API order post error, proceeding with simulated confirmation:', apiErr);
+      console.error('API order post error:', apiErr);
+      setCheckoutError(
+        apiErr instanceof Error
+          ? apiErr.message
+          : 'Order could not be completed. Please try again.'
+      );
+      setIsProcessing(false);
+      setPaymentStep(null);
+      return;
     }
 
     // Clear cart and redirect
@@ -189,6 +200,12 @@ export default function CheckoutPage() {
           <Lock className="w-3.5 h-3.5" /> 256-Bit SSL &bull; Razorpay Escrow Protection
         </div>
       </div>
+
+      {checkoutError && (
+        <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+          {checkoutError}
+        </p>
+      )}
 
       <form onSubmit={handleProcessPayment} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left Column: Delivery Address & Payment Method (7 cols) */}

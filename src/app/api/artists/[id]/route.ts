@@ -17,6 +17,20 @@ export async function GET(
         artworks: {
           where: { status: 'AVAILABLE' },
           include: {
+            artist: {
+              select: {
+                id: true,
+                displayName: true,
+                location: true,
+                avatarUrl: true,
+              },
+            },
+            category: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
             variants: true,
             coa: true,
           },
